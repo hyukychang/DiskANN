@@ -230,6 +230,8 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         else
             optimized_beamwidth = beamwidth;
 
+        diskann::cout splitter << "[debug by hyuk] looking for search" << splitter << "\n\n";
+
         query_result_ids[test_id].resize(recall_at * query_num);
         query_result_dists[test_id].resize(recall_at * query_num);
 
@@ -243,8 +245,6 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         {
             if (!filtered_search)
             {
-                diskann::cout << splitter << splitter << "[debug by hyuk] not filtered search" << splitter << splitter
-                              << "\n\n";
                 _pFlashIndex->cached_beam_search(query + (i * query_aligned_dim), recall_at, L,
                                                  query_result_ids_64.data() + (i * recall_at),
                                                  query_result_dists[test_id].data() + (i * recall_at),
