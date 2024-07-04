@@ -796,17 +796,16 @@ template <typename T, typename LabelT>
 int PQFlashIndex<T, LabelT>::load_from_separate_paths(diskann::MemoryMappedFiles &files, uint32_t num_threads,
                                                       const char *index_filepath, const char *pivots_filepath,
                                                       const char *compressed_filepath)
-{
 #else
 template <typename T, typename LabelT>
 int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, const char *index_filepath,
                                                       const char *pivots_filepath, const char *compressed_filepath)
-{
 #endif
+{
 
     const std::string splitter = "\n############################################################################"
                                  "##############################################################################\n";
-    diskann::cout << splitter << "[debug by hyuk] start running load" << splitter << "\n\n";
+    diskann::cout << splitter << "[debug by hyuk] start running load_from_separate_paths" << splitter << "\n\n";
 
     std::string pq_table_bin = pivots_filepath;
     std::string pq_compressed_vectors = compressed_filepath;
@@ -958,13 +957,15 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
         if (files.fileExists(dummy_map_file))
+#else
+        if (file_exists(dummy_map_file))
+#endif
         {
+#ifdef EXEC_ENV_OLS
             FileContent &content_dummy_map = files.getContent(dummy_map_file);
             std::stringstream dummy_map_stream(
                 std::string((const char *)content_dummy_map._content, content_dummy_map._size));
 #else
-        if (file_exists(dummy_map_file))
-        {
             std::ifstream dummy_map_stream(dummy_map_file);
             assert(dummy_map_stream.is_open());
 #endif
@@ -1208,13 +1209,15 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
     if (files.fileExists(norm_file) && metric == diskann::Metric::INNER_PRODUCT)
+#else
+    if (file_exists(norm_file) && metric == diskann::Metric::INNER_PRODUCT)
+#endif
     {
+#ifdef EXEC_ENV_OLS
         uint64_t dumr, dumc;
         float *norm_val;
         diskann::load_bin<float>(files, norm_val, dumr, dumc);
 #else
-    if (file_exists(norm_file) && metric == diskann::Metric::INNER_PRODUCT)
-    {
         uint64_t dumr, dumc;
         float *norm_val;
         diskann::load_bin<float>(norm_file, norm_val, dumr, dumc);
