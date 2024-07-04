@@ -1011,7 +1011,7 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 #else
     _pq_table.load_pq_centroid_bin(pq_table_bin.c_str(), nchunks_u64);
 #endif
-
+    diskann::cout << splitter << "[debug by hyuk] load_pq_centroid_bin finish" << splitter;
     diskann::cout << "Loaded PQ centroids and in-memory compressed vectors. #points: " << _num_points
                   << " #dim: " << _data_dim << " #aligned_dim: " << _aligned_dim << " #chunks: " << _n_chunks
                   << std::endl;
@@ -1187,6 +1187,8 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         else
         {
             size_t num_centroids, aligned_tmp_dim;
+            diskann::cout << splitter << "[debug by hyuk] centroids_file exist" << splitter
+                          << "[debug by hyuk] start running load_aligned_bin" << splitter;
 #ifdef EXEC_ENV_OLS
             diskann::load_aligned_bin<float>(files, centroids_file, _centroid_data, num_centroids, tmp_dim,
                                              aligned_tmp_dim);

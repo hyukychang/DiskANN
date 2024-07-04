@@ -148,6 +148,7 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
     }
 
     this->n_chunks = nr - 1;
+    diskann::cout << splitter << "[debug by hyuk] Printing Loaded PQ Pivots" << splitter;
     diskann::cout << "Loaded PQ Pivots: #ctrs: " << NUM_PQ_CENTROIDS << ", #dims: " << this->ndims
                   << ", #chunks: " << this->n_chunks << std::endl;
 
