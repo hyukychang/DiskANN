@@ -115,11 +115,12 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
 #else
     reader.reset(new LinuxAlignedFileReader());
 #endif
-
+    diskann::cout << splitter << "[debug by hyuk] make Flash Index" << splitter << "\n\n";
     std::unique_ptr<diskann::PQFlashIndex<T, LabelT>> _pFlashIndex(
         new diskann::PQFlashIndex<T, LabelT>(reader, metric));
 
-    diskann::cout << splitter << "[debug by hyuk] load Flash Index\"" << splitter << "\n\n";
+    diskann::cout << splitter << "[debug by hyuk] load Flash Index with params num_thread : " << num_threads
+                  << " path_prefix : " << index_path_prefix.c_str() << splitter << "\n\n";
     int res = _pFlashIndex->load(num_threads, index_path_prefix.c_str());
 
     if (res != 0)
