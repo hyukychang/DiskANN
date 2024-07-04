@@ -549,6 +549,7 @@ template <typename T, typename LabelT> void PQFlashIndex<T, LabelT>::use_medoids
         }
         delete[] medoid_bufs[cur_m];
     }
+    diskann::cout << splitter << "[debug by hyuk] Finish use_medoids_data_as_centroids" << splitter << "\n\n";
 }
 
 template <typename T, typename LabelT>
@@ -1146,8 +1147,11 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     index_metadata.close();
 #endif
 
+    diskann::cout << splitter << "[debug by hyuk] close meta data" << splitter;
+
 #ifndef EXEC_ENV_OLS
     // open AlignedFileReader handle to index_file
+    diskann::cout << splitter << "[debug by hyuk] open AlignedFileReader handle to index_file" << splitter;
     std::string index_fname(_disk_index_file);
     reader->open(index_fname);
     this->setup_thread_data(num_threads);
@@ -1216,6 +1220,7 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     }
     else
     {
+        diskann::cout << splitter << "[debug by hyuk] medoids_file does not exist" << splitter;
         _num_medoids = 1;
         _medoids = new uint32_t[1];
         _medoids[0] = (uint32_t)(medoid_id_on_file);
