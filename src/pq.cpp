@@ -37,15 +37,19 @@ FixedChunkPQTable::~FixedChunkPQTable()
 
 #ifdef EXEC_ENV_OLS
 void FixedChunkPQTable::load_pq_centroid_bin(MemoryMappedFiles &files, const char *pq_table_file, size_t num_chunks)
-{
 #else
 void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t num_chunks)
-{
 #endif
+{
 
     uint64_t nr, nc;
     std::string rotmat_file = std::string(pq_table_file) + "_rotation_matrix.bin";
-
+    const std::string splitter = "\n############################################################################"
+                                 "##############################################################################\n";
+    diskann::cout
+        << splitter
+        << "[debug by hyuk] start running load_bin in load_pq_centroid_bin with pq_table_file, file_offset_data, nr, nc"
+        << splitter;
 #ifdef EXEC_ENV_OLS
     size_t *file_offset_data; // since load_bin only sets the pointer, no need
                               // to delete.
@@ -82,6 +86,10 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
         throw diskann::ANNException("Wrong number of offsets in pq_pivots", -1, __FUNCSIG__, __FILE__, __LINE__);
     }
 
+    diskann::cout << splitter
+                  << "[debug by hyuk] start running load_bin in load_pq_centroid_bin with pq_table_file, tables, nr, "
+                     "nc, file_offset_data[0]"
+                  << splitter;
 #ifdef EXEC_ENV_OLS
 
     diskann::load_bin<float>(files, pq_table_file, tables, nr, nc, file_offset_data[0]);
@@ -99,6 +107,10 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
 
     this->ndims = nc;
 
+    diskann::cout << splitter
+                  << "[debug by hyuk] start running load_bin in load_pq_centroid_bin with pq_table_file, centroid, nr, "
+                     "nc, file_offset_data[1]"
+                  << splitter;
 #ifdef EXEC_ENV_OLS
     diskann::load_bin<float>(files, pq_table_file, centroid, nr, nc, file_offset_data[1]);
 #else
@@ -118,6 +130,10 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
     {
         chunk_offsets_index = 3;
     }
+    diskann::cout << splitter
+                  << "[debug by hyuk] start running load_bin in load_pq_centroid_bin with pq_table_file, "
+                     "chunk_offsets, nr, nc, file_offset_data[chunk_offsets_index]"
+                  << splitter;
 #ifdef EXEC_ENV_OLS
     diskann::load_bin<uint32_t>(files, pq_table_file, chunk_offsets, nr, nc, file_offset_data[chunk_offsets_index]);
 #else
