@@ -58,8 +58,23 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
 
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
-    diskann::cout << splitter << "[debug by hyuk] Running \"apps>search_disk_index.cpp>search_disk_index\"" << splitter
-                  << "\n\n";
+    diskann::cout << splitter << "[debug by hyuk] Running \"apps>search_disk_index.cpp>search_disk_index\"" << "\n"
+                  << "Params \n"
+                  << "metric : " << metric << "\n"
+                  << "index_path_prefix : " << index_path_prefix << "\n"
+                  << "result_output_prefix : " << result_output_prefix << "\n"
+                  << "query_file : " << query_file << "\n"
+                  << "gt_file : " << gt_file << "\n"
+                  << "num_threads : " << num_threads << "\n"
+                  << "recall_at : " << recall_at << "\n"
+                  << "beamwidth : " << beamwidth << "\n"
+                  << "num_nodes_to_cache : " << num_nodes_to_cache << "\n"
+                  << "search_io_limit : " << search_io_limit << "\n"
+                  << "Lvec : " << Lvec << "\n"
+                  << "fail_if_recall_below : " << fail_if_recall_below << "\n"
+                  << "query_filters : " << query_filters << "\n"
+                  << "use_reorder_data : " << use_reorder_data << "\n"
+                  << splitter << "\n\n";
 
     diskann::cout << "Search parameters: #threads: " << num_threads << ", ";
     if (beamwidth <= 0)
@@ -233,8 +248,8 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         query_result_ids[test_id].resize(recall_at * query_num);
         query_result_dists[test_id].resize(recall_at * query_num);
 
-        diskann::cout << splitter << "[debug by hyuk] looking for search with test_id : " << test_id << splitter << "\n"
-                      << "query_result_ids[test_id].size() : " << query_result_ids[test_id].size() << "\n";
+        diskann::cout << splitter << "[debug by hyuk] looking for search with test_id : " << test_id << "\n"
+                      << "query_result_ids[test_id].size() : " << query_result_ids[test_id].size() << splitter << "\n";
 
         auto stats = new diskann::QueryStats[query_num];
 
