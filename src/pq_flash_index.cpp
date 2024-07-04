@@ -857,12 +857,14 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     this->_n_chunks = nchunks_u64;
 #ifdef EXEC_ENV_OLS
     if (files.fileExists(labels_file))
+#else
+    if (file_exists(labels_file))
+#endif
     {
+#ifdef EXEC_ENV_OLS
         FileContent &content_labels = files.getContent(labels_file);
         std::stringstream infile(std::string((const char *)content_labels._content, content_labels._size));
 #else
-    if (file_exists(labels_file))
-    {
         std::ifstream infile(labels_file, std::ios::binary);
         if (infile.fail())
         {
@@ -890,13 +892,15 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
         if (files.fileExists(labels_to_medoids))
+#else
+        if (file_exists(labels_to_medoids))
+#endif
         {
+#ifdef EXEC_ENV_OLS
             FileContent &content_labels_to_meoids = files.getContent(labels_to_medoids);
             std::stringstream medoid_stream(
                 std::string((const char *)content_labels_to_meoids._content, content_labels_to_meoids._size));
 #else
-        if (file_exists(labels_to_medoids))
-        {
             std::ifstream medoid_stream(labels_to_medoids);
             assert(medoid_stream.is_open());
 #endif
@@ -931,13 +935,15 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
         if (files.fileExists(univ_label_file))
+#else
+        if (file_exists(univ_label_file))
+#endif
         {
+#ifdef EXEC_ENV_OLS
             FileContent &content_univ_label = files.getContent(univ_label_file);
             std::stringstream universal_label_reader(
                 std::string((const char *)content_univ_label._content, content_univ_label._size));
 #else
-        if (file_exists(univ_label_file))
-        {
             std::ifstream universal_label_reader(univ_label_file);
             assert(universal_label_reader.is_open());
 #endif
@@ -1016,14 +1022,16 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     std::string disk_pq_pivots_path = this->_disk_index_file + "_pq_pivots.bin";
 #ifdef EXEC_ENV_OLS
     if (files.fileExists(disk_pq_pivots_path))
+#else
+    if (file_exists(disk_pq_pivots_path))
+#endif
     {
+#ifdef EXEC_ENV_OLS
         _use_disk_index_pq = true;
         // giving 0 chunks to make the _pq_table infer from the
         // chunk_offsets file the correct value
         _disk_pq_table.load_pq_centroid_bin(files, disk_pq_pivots_path.c_str(), 0);
 #else
-    if (file_exists(disk_pq_pivots_path))
-    {
         _use_disk_index_pq = true;
         // giving 0 chunks to make the _pq_table infer from the
         // chunk_offsets file the correct value
@@ -1135,12 +1143,14 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
     if (files.fileExists(medoids_file))
+#else
+    if (file_exists(medoids_file))
+#endif
     {
+#ifdef EXEC_ENV_OLS
         size_t tmp_dim;
         diskann::load_bin<uint32_t>(files, norm_file, medoids_file, _medoids, _num_medoids, tmp_dim);
 #else
-    if (file_exists(medoids_file))
-    {
         size_t tmp_dim;
         diskann::load_bin<uint32_t>(medoids_file, _medoids, _num_medoids, tmp_dim);
 #endif
@@ -1155,11 +1165,10 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         }
 #ifdef EXEC_ENV_OLS
         if (!files.fileExists(centroids_file))
-        {
 #else
         if (!file_exists(centroids_file))
-        {
 #endif
+        {
             diskann::cout << "Centroid data file not found. Using corresponding vectors "
                              "for the medoids "
                           << std::endl;
