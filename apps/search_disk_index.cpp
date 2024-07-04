@@ -55,6 +55,13 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                       const std::vector<uint32_t> &Lvec, const float fail_if_recall_below,
                       const std::vector<std::string> &query_filters, const bool use_reorder_data = false)
 {
+
+    const std::string splitter =
+        "\n####################################################################################"
+        "####################################################################################n";
+    diskann::cout << splitter << "[debug by hyuk] Running \"apps>search_disk_index.cpp>search_disk_index\"" << splitter
+                  << "\n\n";
+
     diskann::cout << "Search parameters: #threads: " << num_threads << ", ";
     if (beamwidth <= 0)
         diskann::cout << "beamwidth to be optimized for each L value" << std::flush;
