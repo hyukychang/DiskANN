@@ -96,6 +96,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     bool calc_recall_flag = false;
     if (gt_file != std::string("null") && gt_file != std::string("NULL") && file_exists(gt_file))
     {
+        diskann::cout << splitter << "[debug by hyuk] going to run load_truthset\"" << splitter << "\n\n";
         diskann::load_truthset(gt_file, gt_ids, gt_dists, gt_num, gt_dim);
         if (gt_num != query_num)
         {
@@ -118,12 +119,15 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     std::unique_ptr<diskann::PQFlashIndex<T, LabelT>> _pFlashIndex(
         new diskann::PQFlashIndex<T, LabelT>(reader, metric));
 
+    diskann::cout << splitter << "[debug by hyuk] load Flash Index\"" << splitter << "\n\n";
     int res = _pFlashIndex->load(num_threads, index_path_prefix.c_str());
 
     if (res != 0)
     {
+        diskann::cout << splitter << "[debug by hyuk] res is not zero\"" << splitter << "\n\n";
         return res;
     }
+    diskann::cout << splitter << "[debug by hyuk] res is zero\"" << splitter << "\n\n";
 
     std::vector<uint32_t> node_list;
     diskann::cout << "Caching " << num_nodes_to_cache << " nodes around medoid(s)" << std::endl;
