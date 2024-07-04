@@ -69,12 +69,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                   << "recall_at : " << recall_at << "\n"
                   << "beamwidth : " << beamwidth << "\n"
                   << "num_nodes_to_cache : " << num_nodes_to_cache << "\n"
-                  << "search_io_limit : " << search_io_limit << "\n"
-                  << "Lvec : " << Lvec << "\n"
-                  << "fail_if_recall_below : " << fail_if_recall_below << "\n"
-                  << "query_filters : " << query_filters << "\n"
-                  << "use_reorder_data : " << use_reorder_data << "\n"
-                  << splitter << "\n\n";
+                  << "search_io_limit : " << search_io_limit << "\n";
 
     diskann::cout << "Search parameters: #threads: " << num_threads << ", ";
     if (beamwidth <= 0)
