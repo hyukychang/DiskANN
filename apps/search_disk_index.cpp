@@ -230,7 +230,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         else
             optimized_beamwidth = beamwidth;
 
-        diskann::cout splitter << "[debug by hyuk] looking for search" << splitter << "\n\n";
+        diskann::cout << splitter << "[debug by hyuk] looking for search" << splitter << "\n\n";
 
         query_result_ids[test_id].resize(recall_at * query_num);
         query_result_dists[test_id].resize(recall_at * query_num);
