@@ -860,6 +860,7 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     if (file_exists(labels_file))
 #endif
     {
+        diskann::cout << splitter << "[debug by hyuk] label_file file exist" << splitter;
 #ifdef EXEC_ENV_OLS
         FileContent &content_labels = files.getContent(labels_file);
         std::stringstream infile(std::string((const char *)content_labels._content, content_labels._size));
@@ -895,6 +896,7 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         if (file_exists(labels_to_medoids))
 #endif
         {
+            diskann::cout << splitter << "[debug by hyuk] labels_to_medoids file exist" << splitter;
 #ifdef EXEC_ENV_OLS
             FileContent &content_labels_to_meoids = files.getContent(labels_to_medoids);
             std::stringstream medoid_stream(
@@ -938,6 +940,7 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         if (file_exists(univ_label_file))
 #endif
         {
+            diskann::cout << splitter << "[debug by hyuk] univ_label_file file exist" << splitter;
 #ifdef EXEC_ENV_OLS
             FileContent &content_univ_label = files.getContent(univ_label_file);
             std::stringstream universal_label_reader(
@@ -961,6 +964,7 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         if (file_exists(dummy_map_file))
 #endif
         {
+            diskann::cout << splitter << "[debug by hyuk] dummy_map_file file exist" << splitter;
 #ifdef EXEC_ENV_OLS
             FileContent &content_dummy_map = files.getContent(dummy_map_file);
             std::stringstream dummy_map_stream(
@@ -1001,6 +1005,7 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         }
     }
 
+    diskann::cout << splitter << "[debug by hyuk] load_pq_centroid_bin" << splitter;
 #ifdef EXEC_ENV_OLS
     _pq_table.load_pq_centroid_bin(files, pq_table_bin.c_str(), nchunks_u64);
 #else
@@ -1027,6 +1032,8 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     if (file_exists(disk_pq_pivots_path))
 #endif
     {
+        diskann::cout << splitter << "[debug by hyuk] disk_pq_pivots_path file exist" << splitter
+                      << "[debug by hyuk] going to load disk_pq_centroid_bin" << splitter;
 #ifdef EXEC_ENV_OLS
         _use_disk_index_pq = true;
         // giving 0 chunks to make the _pq_table infer from the
@@ -1148,6 +1155,8 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     if (file_exists(medoids_file))
 #endif
     {
+        diskann::cout << splitter << "[debug by hyuk] medoids_file exist" << splitter
+                      << "[debug by hyuk] start running load_bin" << splitter;
 #ifdef EXEC_ENV_OLS
         size_t tmp_dim;
         diskann::load_bin<uint32_t>(files, norm_file, medoids_file, _medoids, _num_medoids, tmp_dim);
@@ -1213,6 +1222,8 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     if (file_exists(norm_file) && metric == diskann::Metric::INNER_PRODUCT)
 #endif
     {
+        diskann::cout << splitter << "[debug by hyuk] norm_file exist" << splitter
+                      << "[debug by hyuk] start running load_bin" << splitter;
 #ifdef EXEC_ENV_OLS
         uint64_t dumr, dumc;
         float *norm_val;
