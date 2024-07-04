@@ -502,7 +502,7 @@ void PQFlashIndex<T, LabelT>::cache_bfs_levels(uint64_t num_nodes_to_cache, std:
 template <typename T, typename LabelT> void PQFlashIndex<T, LabelT>::use_medoids_data_as_centroids()
 {
     const std::string splitter = "\n############################################################################"
-                                 "####################################\n";
+                                 "##############################################################################\n";
     diskann::cout << splitter << "[debug by hyuk] use_medoids_data_as_centroids" << splitter << "\n\n";
 
     if (_centroid_data != nullptr)
@@ -1303,6 +1303,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                                  uint64_t *indices, float *distances, const uint64_t beam_width,
                                                  const bool use_reorder_data, QueryStats *stats)
 {
+    // 1.
+    // 만약 해당 처럼 변수가 8개가 들어오면 이 함수를 실행하고,
+    // 3.의 format으로 io_limit = std::numeric_limits<uint32_t>::max() 으로 셋팅하고 실행
     cached_beam_search(query1, k_search, l_search, indices, distances, beam_width, std::numeric_limits<uint32_t>::max(),
                        use_reorder_data, stats);
 }
@@ -1313,6 +1316,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                                  const bool use_filter, const LabelT &filter_label,
                                                  const bool use_reorder_data, QueryStats *stats)
 {
+    // 2.
+    // 만약 해당 처럼 변수가 10개가 들어오면 이 함수를 실행하고,
+    // 4.의 format으로 io_limit = std::numeric_limits<uint32_t>::max() 으로 셋팅하고 실행 => 변수 11개
     cached_beam_search(query1, k_search, l_search, indices, distances, beam_width, use_filter, filter_label,
                        std::numeric_limits<uint32_t>::max(), use_reorder_data, stats);
 }
@@ -1323,6 +1329,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                                  const uint32_t io_limit, const bool use_reorder_data,
                                                  QueryStats *stats)
 {
+    // 3.
+    // 만약 해당 처럼 변수가 9개가 들어오면 이 함수를 실행하고,
+    // 4.의 format으로 use_filter = false, filter_label = dummy_filter (= 0) 으로 셋팅하고 실행 => 변수 10개
     LabelT dummy_filter = 0;
     cached_beam_search(query1, k_search, l_search, indices, distances, beam_width, false, dummy_filter, io_limit,
                        use_reorder_data, stats);
@@ -1335,6 +1344,8 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                                  const uint32_t io_limit, const bool use_reorder_data,
                                                  QueryStats *stats)
 {
+    // 4.
+    // 여기가 사실 main beam search
 
     uint64_t num_sector_per_nodes = DIV_ROUND_UP(_max_node_len, defaults::SECTOR_LEN);
     if (beam_width > num_sector_per_nodes * defaults::MAX_N_SECTOR_READS)
