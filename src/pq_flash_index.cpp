@@ -501,6 +501,10 @@ void PQFlashIndex<T, LabelT>::cache_bfs_levels(uint64_t num_nodes_to_cache, std:
 
 template <typename T, typename LabelT> void PQFlashIndex<T, LabelT>::use_medoids_data_as_centroids()
 {
+    const std::string splitter = "\n############################################################################"
+                                 "##############################################################################\n";
+    diskann::cout << splitter << "[debug by hyuk] use_medoids_data_as_centroids" << splitter << "\n\n";
+
     if (_centroid_data != nullptr)
         aligned_free(_centroid_data);
     alloc_aligned(((void **)&_centroid_data), _num_medoids * _aligned_dim * sizeof(float), 32);
@@ -1128,6 +1132,8 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         READ_U64(index_metadata, this->_ndims_reorder_vecs);
         READ_U64(index_metadata, this->_nvecs_per_sector);
     }
+
+    diskann::cout << splitter << "[debug by hyuk] Printing disk-index file meta-data" << splitter;
 
     diskann::cout << "Disk-Index File Meta-data: ";
     diskann::cout << "# nodes per sector: " << _nnodes_per_sector;
