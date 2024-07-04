@@ -502,7 +502,7 @@ void PQFlashIndex<T, LabelT>::cache_bfs_levels(uint64_t num_nodes_to_cache, std:
 template <typename T, typename LabelT> void PQFlashIndex<T, LabelT>::use_medoids_data_as_centroids()
 {
     const std::string splitter = "\n############################################################################"
-                                 "##############################################################################\n";
+                                 "####################################\n";
     diskann::cout << splitter << "[debug by hyuk] use_medoids_data_as_centroids" << splitter << "\n\n";
 
     if (_centroid_data != nullptr)
@@ -781,7 +781,7 @@ template <typename T, typename LabelT> int PQFlashIndex<T, LabelT>::load(uint32_
 {
 #endif
     const std::string splitter = "\n############################################################################"
-                                 "##############################################################################\n";
+                                 "####################################\n";
     diskann::cout << splitter << "[debug by hyuk] start running load" << splitter << "\n\n";
 
     std::string pq_table_bin = std::string(index_prefix) + "_pq_pivots.bin";
@@ -809,7 +809,7 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 {
 
     const std::string splitter = "\n############################################################################"
-                                 "##############################################################################\n";
+                                 "####################################\n";
     diskann::cout << splitter << "[debug by hyuk] start running load_from_separate_paths" << splitter << "\n\n";
 
     std::string pq_table_bin = pivots_filepath;

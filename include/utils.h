@@ -813,7 +813,7 @@ inline void load_aligned_bin(const std::string &bin_file, T *&data, size_t &npts
     try
     {
         const std::string splitter = "\n############################################################################"
-                                     "##############################################################################\n";
+                                     "####################################\n";
         diskann::cout << splitter << "[debuging by hyuk] Executing in the c code" << splitter << "\n";
 
         diskann::cout << "Reading (with alignment) bin file " << bin_file << " ..." << std::flush;

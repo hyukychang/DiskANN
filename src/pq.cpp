@@ -45,7 +45,7 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
     uint64_t nr, nc;
     std::string rotmat_file = std::string(pq_table_file) + "_rotation_matrix.bin";
     const std::string splitter = "\n############################################################################"
-                                 "##############################################################################\n";
+                                 "####################################\n";
     diskann::cout
         << splitter
         << "[debug by hyuk] start running load_bin in load_pq_centroid_bin with pq_table_file, file_offset_data, nr, nc"
