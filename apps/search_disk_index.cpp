@@ -125,10 +125,10 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
 
     if (res != 0)
     {
-        diskann::cout << splitter << "[debug by hyuk] res is not zero\"" << splitter << "\n\n";
+        diskann::cout << splitter << "[debug by hyuk] res is not zero" << splitter << "\n\n";
         return res;
     }
-    diskann::cout << splitter << "[debug by hyuk] res is zero\"" << splitter << "\n\n";
+    diskann::cout << splitter << "[debug by hyuk] res is zero" << splitter << "\n\n";
 
     std::vector<uint32_t> node_list;
     diskann::cout << "Caching " << num_nodes_to_cache << " nodes around medoid(s)" << std::endl;
@@ -137,6 +137,9 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     //     _pFlashIndex->generate_cache_list_from_sample_queries(warmup_query_file, 15, 6, num_nodes_to_cache,
     //     num_threads, node_list);
     _pFlashIndex->load_cache_list(node_list);
+
+    diskann::cout << splitter << "[debug by hyuk] cache load finish" << splitter << "\n\n";
+
     node_list.clear();
     node_list.shrink_to_fit();
 
@@ -240,6 +243,8 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         {
             if (!filtered_search)
             {
+                diskann::cout << splitter << splitter << "[debug by hyuk] not filtered search" << splitter << splitter
+                              << "\n\n";
                 _pFlashIndex->cached_beam_search(query + (i * query_aligned_dim), recall_at, L,
                                                  query_result_ids_64.data() + (i * recall_at),
                                                  query_result_dists[test_id].data() + (i * recall_at),
