@@ -814,14 +814,19 @@ inline void load_aligned_bin(const std::string &bin_file, T *&data, size_t &npts
     {
         const std::string splitter = "\n############################################################################"
                                      "##############################################################################\n";
-        diskann::cout << splitter << "[debuging by hyuk] Executing in the c code" << splitter;
+        diskann::cout << splitter << "[debuging by hyuk] Executing in the c code" << splitter << "\n";
 
         diskann::cout << "Reading (with alignment) bin file " << bin_file << " ..." << std::flush;
         reader.open(bin_file, std::ios::binary | std::ios::ate);
 
         uint64_t fsize = reader.tellg();
         reader.seekg(0);
+
+        diskann::cout << splitter << "[debuging by hyuk] running load_aligned_bin_impl" << splitter << "\n";
+
         load_aligned_bin_impl(reader, fsize, data, npts, dim, rounded_dim);
+
+        diskann::cout << splitter << "[debuging by hyuk] finish load_aligned_bin_impl" << splitter << "\n";
     }
     catch (std::system_error &e)
     {
