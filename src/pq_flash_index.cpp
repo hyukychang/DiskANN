@@ -843,13 +843,15 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
     size_t npts_u64, nchunks_u64;
 
-    diskann::cout << splitter << "[debug by hyuk] start running load_bin" << splitter << "\n\n";
+    diskann::cout << splitter << "[debug by hyuk] start running load_bin" << splitter;
 
 #ifdef EXEC_ENV_OLS
     diskann::load_bin<uint8_t>(files, pq_compressed_vectors, this->data, npts_u64, nchunks_u64);
 #else
     diskann::load_bin<uint8_t>(pq_compressed_vectors, this->data, npts_u64, nchunks_u64);
 #endif
+
+    diskann::cout << splitter << "[debug by hyuk] finish running load_bin" << splitter;
 
     this->_num_points = npts_u64;
     this->_n_chunks = nchunks_u64;
