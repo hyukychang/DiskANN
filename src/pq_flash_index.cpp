@@ -803,6 +803,11 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
                                                       const char *pivots_filepath, const char *compressed_filepath)
 {
 #endif
+
+    const std::string splitter = "\n############################################################################"
+                                 "##############################################################################\n";
+    diskann::cout << splitter << "[debug by hyuk] start running load" << splitter << "\n\n";
+
     std::string pq_table_bin = pivots_filepath;
     std::string pq_compressed_vectors = compressed_filepath;
     std::string _disk_index_file = index_filepath;
@@ -837,6 +842,9 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     this->_aligned_dim = ROUND_UP(pq_file_dim, 8);
 
     size_t npts_u64, nchunks_u64;
+
+    diskann::cout << splitter << "[debug by hyuk] start running load_bin" << splitter << "\n\n";
+
 #ifdef EXEC_ENV_OLS
     diskann::load_bin<uint8_t>(files, pq_compressed_vectors, this->data, npts_u64, nchunks_u64);
 #else
