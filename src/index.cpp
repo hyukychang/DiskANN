@@ -535,9 +535,6 @@ void Index<T, TagT, LabelT>::load(AlignedFileReader &reader, uint32_t num_thread
 void Index<T, TagT, LabelT>::load(const char *filename, uint32_t num_threads, uint32_t search_l)
 {
 #endif
-    const std::string splitter = "\n############################################################################"
-                                 "##############################################################################\n";
-    diskann::cout << splitter << "[debug by hyuk] start running load" << splitter << "\n\n";
 
     std::unique_lock<std::shared_timed_mutex> ul(_update_lock);
     std::unique_lock<std::shared_timed_mutex> cl(_consolidate_lock);

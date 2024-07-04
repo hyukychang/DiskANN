@@ -775,6 +775,10 @@ int PQFlashIndex<T, LabelT>::load(MemoryMappedFiles &files, uint32_t num_threads
 template <typename T, typename LabelT> int PQFlashIndex<T, LabelT>::load(uint32_t num_threads, const char *index_prefix)
 {
 #endif
+    const std::string splitter = "\n############################################################################"
+                                 "##############################################################################\n";
+    diskann::cout << splitter << "[debug by hyuk] start running load" << splitter << "\n\n";
+
     std::string pq_table_bin = std::string(index_prefix) + "_pq_pivots.bin";
     std::string pq_compressed_vectors = std::string(index_prefix) + "_pq_compressed.bin";
     std::string _disk_index_file = std::string(index_prefix) + "_disk.index";
