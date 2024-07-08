@@ -632,6 +632,9 @@ int build_merged_vamana_index(std::string base_file, diskann::Metric compareMetr
                               const std::string &labels_to_medoids_file, const std::string &universal_label,
                               const uint32_t Lf)
 {
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    diskann::cout << splitter << "[debug by hyuk]Building merged vamana index" << splitter << std::endl;
     size_t base_num, base_dim;
     diskann::get_bin_metadata(base_file, base_num, base_dim);
 
