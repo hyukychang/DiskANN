@@ -244,7 +244,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         query_result_dists[test_id].resize(recall_at * query_num);
 
         diskann::cout << splitter << "[debug by hyuk] looking for search with test_id : " << test_id << "\n"
-                      << "query_result_ids[test_id].size() : " << query_result_ids[test_id].size()
+                      << "query_result_ids[test_id].size() : " << query_result_ids[test_id].size() << "\n"
                       << "query_number : " << query_num << splitter << "\n";
 
         auto stats = new diskann::QueryStats[query_num];
@@ -278,6 +278,8 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                     query_result_dists[test_id].data() + (i * recall_at), optimized_beamwidth, true, label_for_search,
                     use_reorder_data, stats + i);
             }
+            diskann::cout << splitter << "[debug by hyuk] executed query : " << i << splitter << "\n";
+            break;
         }
         auto e = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> diff = e - s;

@@ -1346,6 +1346,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 {
     // 4.
     // 여기가 사실 main beam search
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    diskann::cout << splitter << "[debug by hyuk] running main cached_beam_search" << splitter << "\n";
 
     uint64_t num_sector_per_nodes = DIV_ROUND_UP(_max_node_len, defaults::SECTOR_LEN);
     if (beam_width > num_sector_per_nodes * defaults::MAX_N_SECTOR_READS)
