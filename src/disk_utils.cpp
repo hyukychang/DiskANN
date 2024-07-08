@@ -1292,11 +1292,13 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     Timer timer;
     diskann::get_bin_metadata(data_file_to_use.c_str(), points_num, dim);
     const double p_val = ((double)MAX_PQ_TRAINING_SET_SIZE / (double)points_num);
-
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
     if (use_disk_pq)
     {
         generate_disk_quantized_data<T>(data_file_to_use, disk_pq_pivots_path, disk_pq_compressed_vectors_path,
                                         compareMetric, p_val, disk_pq_dims);
+        diskann::cout << splitter << "[debug by hyuk] generating disk_quantized_data" << splitter;
     }
     size_t num_pq_chunks = (size_t)(std::floor)(uint64_t(final_index_ram_limit / points_num));
 
