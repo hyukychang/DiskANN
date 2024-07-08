@@ -28,6 +28,7 @@
 #endif
 
 #define WARMUP false
+#define HYUK_DEBUG true
 
 namespace po = boost::program_options;
 
