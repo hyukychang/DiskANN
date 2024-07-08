@@ -632,9 +632,11 @@ int build_merged_vamana_index(std::string base_file, diskann::Metric compareMetr
                               const std::string &labels_to_medoids_file, const std::string &universal_label,
                               const uint32_t Lf)
 {
+#ifdef HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
     diskann::cout << splitter << "[debug by hyuk]Building merged vamana index" << splitter << std::endl;
+#endif
     size_t base_num, base_dim;
     diskann::get_bin_metadata(base_file, base_num, base_dim);
 
@@ -1319,7 +1321,9 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     generate_quantized_data<T>(data_file_to_use, pq_pivots_path, pq_compressed_vectors_path, compareMetric, p_val,
                                num_pq_chunks, use_opq, codebook_prefix);
     diskann::cout << timer.elapsed_seconds_for_step("generating quantized data") << std::endl;
+#ifdef HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] generating disk_quantized_data" << splitter;
+#endif
 
 // Gopal. Splitting diskann_dll into separate DLLs for search and build.
 // This code should only be available in the "build" DLL.

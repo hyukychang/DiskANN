@@ -501,10 +501,11 @@ void PQFlashIndex<T, LabelT>::cache_bfs_levels(uint64_t num_nodes_to_cache, std:
 
 template <typename T, typename LabelT> void PQFlashIndex<T, LabelT>::use_medoids_data_as_centroids()
 {
+#ifdef HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "##############################################################################\n";
     diskann::cout << splitter << "[debug by hyuk] use_medoids_data_as_centroids" << splitter << "\n\n";
-
+#endif
     if (_centroid_data != nullptr)
         aligned_free(_centroid_data);
     alloc_aligned(((void **)&_centroid_data), _num_medoids * _aligned_dim * sizeof(float), 32);
@@ -549,7 +550,9 @@ template <typename T, typename LabelT> void PQFlashIndex<T, LabelT>::use_medoids
         }
         delete[] medoid_bufs[cur_m];
     }
+#ifdef HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] Finish use_medoids_data_as_centroids" << splitter << "\n\n";
+#endif
 }
 
 template <typename T, typename LabelT>
@@ -780,10 +783,11 @@ int PQFlashIndex<T, LabelT>::load(MemoryMappedFiles &files, uint32_t num_threads
 template <typename T, typename LabelT> int PQFlashIndex<T, LabelT>::load(uint32_t num_threads, const char *index_prefix)
 {
 #endif
+#ifdef HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
     diskann::cout << splitter << "[debug by hyuk] start running load" << splitter << "\n\n";
-
+#endif
     std::string pq_table_bin = std::string(index_prefix) + "_pq_pivots.bin";
     std::string pq_compressed_vectors = std::string(index_prefix) + "_pq_compressed.bin";
     std::string _disk_index_file = std::string(index_prefix) + "_disk.index";
@@ -807,11 +811,11 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
                                                       const char *pivots_filepath, const char *compressed_filepath)
 #endif
 {
-
+#ifdef HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
     diskann::cout << splitter << "[debug by hyuk] start running load_from_separate_paths" << splitter << "\n\n";
-
+#endif
     std::string pq_table_bin = pivots_filepath;
     std::string pq_compressed_vectors = compressed_filepath;
     std::string _disk_index_file = index_filepath;
@@ -846,16 +850,18 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     this->_aligned_dim = ROUND_UP(pq_file_dim, 8);
 
     size_t npts_u64, nchunks_u64;
-
+#ifdef HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] start running load_bin" << splitter;
-
+#endif
 #ifdef EXEC_ENV_OLS
     diskann::load_bin<uint8_t>(files, pq_compressed_vectors, this->data, npts_u64, nchunks_u64);
 #else
     diskann::load_bin<uint8_t>(pq_compressed_vectors, this->data, npts_u64, nchunks_u64);
 #endif
 
+#ifdef HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] finish running load_bin" << splitter;
+#endif
 
     this->_num_points = npts_u64;
     this->_n_chunks = nchunks_u64;
@@ -865,7 +871,9 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     if (file_exists(labels_file))
 #endif
     {
+#ifdef HYUK_DEBUG
         diskann::cout << splitter << "[debug by hyuk] label_file file exist" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
         FileContent &content_labels = files.getContent(labels_file);
         std::stringstream infile(std::string((const char *)content_labels._content, content_labels._size));
@@ -901,7 +909,9 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         if (file_exists(labels_to_medoids))
 #endif
         {
+#ifdef HYUK_DEBUG
             diskann::cout << splitter << "[debug by hyuk] labels_to_medoids file exist" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
             FileContent &content_labels_to_meoids = files.getContent(labels_to_medoids);
             std::stringstream medoid_stream(
@@ -945,7 +955,9 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         if (file_exists(univ_label_file))
 #endif
         {
+#ifdef HYUK_DEBUG
             diskann::cout << splitter << "[debug by hyuk] univ_label_file file exist" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
             FileContent &content_univ_label = files.getContent(univ_label_file);
             std::stringstream universal_label_reader(
@@ -969,7 +981,9 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         if (file_exists(dummy_map_file))
 #endif
         {
+#ifdef HYUK_DEBUG
             diskann::cout << splitter << "[debug by hyuk] dummy_map_file file exist" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
             FileContent &content_dummy_map = files.getContent(dummy_map_file);
             std::stringstream dummy_map_stream(
@@ -1009,18 +1023,20 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
             diskann::cout << "Loaded dummy map" << std::endl;
         }
     }
-
+#ifdef HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] load_pq_centroid_bin" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
     _pq_table.load_pq_centroid_bin(files, pq_table_bin.c_str(), nchunks_u64);
 #else
     _pq_table.load_pq_centroid_bin(pq_table_bin.c_str(), nchunks_u64);
 #endif
+#ifdef HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] load_pq_centroid_bin finish" << splitter;
     diskann::cout << "Loaded PQ centroids and in-memory compressed vectors. #points: " << _num_points
                   << " #dim: " << _data_dim << " #aligned_dim: " << _aligned_dim << " #chunks: " << _n_chunks
                   << std::endl;
-
+#endif
     if (_n_chunks > MAX_PQ_CHUNKS)
     {
         std::stringstream stream;
@@ -1037,8 +1053,10 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     if (file_exists(disk_pq_pivots_path))
 #endif
     {
+#ifdef HYUK_DEBUG
         diskann::cout << splitter << "[debug by hyuk] disk_pq_pivots_path file exist" << splitter
                       << "[debug by hyuk] going to load disk_pq_centroid_bin" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
         _use_disk_index_pq = true;
         // giving 0 chunks to make the _pq_table infer from the
@@ -1133,9 +1151,9 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         READ_U64(index_metadata, this->_ndims_reorder_vecs);
         READ_U64(index_metadata, this->_nvecs_per_sector);
     }
-
+#ifdef HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] Printing disk-index file meta-data" << splitter;
-
+#endif
     diskann::cout << "Disk-Index File Meta-data: ";
     diskann::cout << "# nodes per sector: " << _nnodes_per_sector;
     diskann::cout << ", max node len (bytes): " << _max_node_len;
@@ -1147,11 +1165,15 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     index_metadata.close();
 #endif
 
+#ifdef HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] close meta data" << splitter;
+#endif
 
 #ifndef EXEC_ENV_OLS
     // open AlignedFileReader handle to index_file
+#ifdef HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] open AlignedFileReader handle to index_file" << splitter;
+#endif
     std::string index_fname(_disk_index_file);
     reader->open(index_fname);
     this->setup_thread_data(num_threads);
@@ -1165,8 +1187,10 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     if (file_exists(medoids_file))
 #endif
     {
+#ifdef HYUK_DEBUG
         diskann::cout << splitter << "[debug by hyuk] medoids_file exist" << splitter
                       << "[debug by hyuk] start running load_bin" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
         size_t tmp_dim;
         diskann::load_bin<uint32_t>(files, norm_file, medoids_file, _medoids, _num_medoids, tmp_dim);
@@ -1197,8 +1221,10 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         else
         {
             size_t num_centroids, aligned_tmp_dim;
+#ifdef HYUK_DEBUG
             diskann::cout << splitter << "[debug by hyuk] centroids_file exist" << splitter
                           << "[debug by hyuk] start running load_aligned_bin" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
             diskann::load_aligned_bin<float>(files, centroids_file, _centroid_data, num_centroids, tmp_dim,
                                              aligned_tmp_dim);
@@ -1220,7 +1246,9 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     }
     else
     {
+#ifdef HYUK_DEBUG
         diskann::cout << splitter << "[debug by hyuk] medoids_file does not exist" << splitter;
+#endif
         _num_medoids = 1;
         _medoids = new uint32_t[1];
         _medoids[0] = (uint32_t)(medoid_id_on_file);
@@ -1235,8 +1263,10 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     if (file_exists(norm_file) && metric == diskann::Metric::INNER_PRODUCT)
 #endif
     {
+#ifdef HYUK_DEBUG
         diskann::cout << splitter << "[debug by hyuk] norm_file exist" << splitter
                       << "[debug by hyuk] start running load_bin" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
         uint64_t dumr, dumc;
         float *norm_val;
@@ -1346,10 +1376,11 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 {
     // 4.
     // 여기가 사실 main beam search
+#ifdef HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
     diskann::cout << splitter << "[debug by hyuk] running main cached_beam_search" << splitter << "\n";
-
+#endif
     uint64_t num_sector_per_nodes = DIV_ROUND_UP(_max_node_len, defaults::SECTOR_LEN);
     if (beam_width > num_sector_per_nodes * defaults::MAX_N_SECTOR_READS)
         throw ANNException("Beamwidth can not be higher than defaults::MAX_N_SECTOR_READS", -1, __FUNCSIG__, __FILE__,
