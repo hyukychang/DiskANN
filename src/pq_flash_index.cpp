@@ -25,6 +25,8 @@
 // sector # beyond the end of graph where data for id is present for reordering
 #define VECTOR_SECTOR_OFFSET(id) ((((uint64_t)(id)) % _nvecs_per_sector) * _data_dim * sizeof(float))
 
+#define HYUK_DEBUG true
+
 namespace diskann
 {
 

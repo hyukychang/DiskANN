@@ -19,6 +19,8 @@
 #include "timer.h"
 #include "tsl/robin_set.h"
 
+#define HYUK_DEBUG true
+
 namespace diskann
 {
 
