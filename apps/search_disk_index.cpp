@@ -244,7 +244,8 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         query_result_dists[test_id].resize(recall_at * query_num);
 
         diskann::cout << splitter << "[debug by hyuk] looking for search with test_id : " << test_id << "\n"
-                      << "query_result_ids[test_id].size() : " << query_result_ids[test_id].size() << splitter << "\n";
+                      << "query_result_ids[test_id].size() : " << query_result_ids[test_id].size()
+                      << "query_number : " << query_num << splitter << "\n";
 
         auto stats = new diskann::QueryStats[query_num];
 
