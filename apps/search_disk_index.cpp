@@ -255,6 +255,14 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
 #pragma omp parallel for schedule(dynamic, 1)
         for (int64_t i = 0; i < (int64_t)query_num; i++)
         {
+            if (i == 0)
+            {
+                diskann::cout << splitter << "[debug by hyuk] going to execute query : " << i << splitter << "\n";
+            }
+            else
+            {
+                continue;
+            }
             if (!filtered_search)
             {
                 _pFlashIndex->cached_beam_search(query + (i * query_aligned_dim), recall_at, L,
@@ -278,8 +286,6 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                     query_result_dists[test_id].data() + (i * recall_at), optimized_beamwidth, true, label_for_search,
                     use_reorder_data, stats + i);
             }
-            diskann::cout << splitter << "[debug by hyuk] executed query : " << i << splitter << "\n";
-            break;
         }
         auto e = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> diff = e - s;
