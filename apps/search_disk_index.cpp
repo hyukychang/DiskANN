@@ -55,7 +55,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                       const std::vector<uint32_t> &Lvec, const float fail_if_recall_below,
                       const std::vector<std::string> &query_filters, const bool use_reorder_data = false)
 {
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
     diskann::cout << splitter << "[debug by hyuk] Running \"apps>search_disk_index.cpp>search_disk_index\"" << "\n"
@@ -106,7 +106,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     bool calc_recall_flag = false;
     if (gt_file != std::string("null") && gt_file != std::string("NULL") && file_exists(gt_file))
     {
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
         diskann::cout << splitter << "[debug by hyuk] going to run load_truthset\"" << splitter << "\n\n";
 #endif
         diskann::load_truthset(gt_file, gt_ids, gt_dists, gt_num, gt_dim);
@@ -127,13 +127,13 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
 #else
     reader.reset(new LinuxAlignedFileReader());
 #endif
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] make Flash Index" << splitter << "\n\n";
 #endif
     std::unique_ptr<diskann::PQFlashIndex<T, LabelT>> _pFlashIndex(
         new diskann::PQFlashIndex<T, LabelT>(reader, metric));
 
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] load Flash Index with params num_thread : " << num_threads
                   << " path_prefix : " << index_path_prefix.c_str() << splitter << "\n\n";
 #endif
@@ -141,12 +141,12 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
 
     if (res != 0)
     {
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
         diskann::cout << splitter << "[debug by hyuk] res is not zero" << splitter << "\n\n";
 #endif
         return res;
     }
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] res is zero" << splitter << "\n\n";
 #endif
 
@@ -158,7 +158,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     //     num_threads, node_list);
     _pFlashIndex->load_cache_list(node_list);
 
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] cache load finish" << splitter << "\n\n";
 #endif
 
@@ -255,7 +255,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         query_result_ids[test_id].resize(recall_at * query_num);
         query_result_dists[test_id].resize(recall_at * query_num);
 
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
         diskann::cout << splitter << "[debug by hyuk] looking for search with test_id : " << test_id << "\n"
                       << "query_result_ids[test_id].size() : " << query_result_ids[test_id].size() << "\n"
                       << "query_number : " << query_num << splitter << "\n";
@@ -268,7 +268,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
 #pragma omp parallel for schedule(dynamic, 1)
         for (int64_t i = 0; i < (int64_t)query_num; i++)
         {
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
             if (i == 0)
             {
                 diskann::cout << splitter << "[debug by hyuk] going to execute query : " << i << splitter << "\n";

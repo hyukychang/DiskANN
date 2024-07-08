@@ -44,7 +44,7 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
 
     uint64_t nr, nc;
     std::string rotmat_file = std::string(pq_table_file) + "_rotation_matrix.bin";
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
     diskann::cout
@@ -87,7 +87,7 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
     {
         throw diskann::ANNException("Wrong number of offsets in pq_pivots", -1, __FUNCSIG__, __FILE__, __LINE__);
     }
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     diskann::cout << splitter
                   << "[debug by hyuk] start running load_bin in load_pq_centroid_bin with pq_table_file, tables, nr, "
                      "nc, file_offset_data[0]"
@@ -109,7 +109,7 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
     }
 
     this->ndims = nc;
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     diskann::cout << splitter
                   << "[debug by hyuk] start running load_bin in load_pq_centroid_bin with pq_table_file, centroid, nr, "
                      "nc, file_offset_data[1]"
@@ -134,7 +134,7 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
     {
         chunk_offsets_index = 3;
     }
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     diskann::cout << splitter
                   << "[debug by hyuk] start running load_bin in load_pq_centroid_bin with pq_table_file, "
                      "chunk_offsets, nr, nc, file_offset_data[chunk_offsets_index]"
@@ -154,7 +154,7 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
     }
 
     this->n_chunks = nr - 1;
-#ifdef HYUK_DEBUG
+#if HYUK_DEBUG
     diskann::cout << splitter << "[debug by hyuk] Printing Loaded PQ Pivots" << splitter;
 #endif
     diskann::cout << "Loaded PQ Pivots: #ctrs: " << NUM_PQ_CENTROIDS << ", #dims: " << this->ndims
