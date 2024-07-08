@@ -1298,7 +1298,6 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     {
         generate_disk_quantized_data<T>(data_file_to_use, disk_pq_pivots_path, disk_pq_compressed_vectors_path,
                                         compareMetric, p_val, disk_pq_dims);
-        diskann::cout << splitter << "[debug by hyuk] generating disk_quantized_data" << splitter;
     }
     size_t num_pq_chunks = (size_t)(std::floor)(uint64_t(final_index_ram_limit / points_num));
 
@@ -1320,6 +1319,7 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     generate_quantized_data<T>(data_file_to_use, pq_pivots_path, pq_compressed_vectors_path, compareMetric, p_val,
                                num_pq_chunks, use_opq, codebook_prefix);
     diskann::cout << timer.elapsed_seconds_for_step("generating quantized data") << std::endl;
+    diskann::cout << splitter << "[debug by hyuk] generating disk_quantized_data" << splitter;
 
 // Gopal. Splitting diskann_dll into separate DLLs for search and build.
 // This code should only be available in the "build" DLL.
