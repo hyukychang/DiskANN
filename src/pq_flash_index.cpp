@@ -25,7 +25,7 @@
 // sector # beyond the end of graph where data for id is present for reordering
 #define VECTOR_SECTOR_OFFSET(id) ((((uint64_t)(id)) % _nvecs_per_sector) * _data_dim * sizeof(float))
 
-#define HYUK_DEBUG true
+#define HYUK_DEBUG false
 
 namespace diskann
 {
@@ -1398,11 +1398,17 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                  "####################################\n";
     diskann::cout << splitter << "[debug by hyuk] running main cached_beam_search" << splitter << "\n";
 #endif
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 1. check if beam_width is valid
+    ////////////////////////////////////////////////////////////////////////////////////
     uint64_t num_sector_per_nodes = DIV_ROUND_UP(_max_node_len, defaults::SECTOR_LEN);
     if (beam_width > num_sector_per_nodes * defaults::MAX_N_SECTOR_READS)
         throw ANNException("Beamwidth can not be higher than defaults::MAX_N_SECTOR_READS", -1, __FUNCSIG__, __FILE__,
                            __LINE__);
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 2. Scratch_space setup
+    ////////////////////////////////////////////////////////////////////////////////////
     ScratchStoreManager<SSDThreadData<T>> manager(this->_thread_data);
     auto data = manager.scratch_space();
     IOContext &ctx = data->ctx;
@@ -1412,6 +1418,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     // reset query scratch
     query_scratch->reset();
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 3. Query normalization
+    ////////////////////////////////////////////////////////////////////////////////////
     // copy query to thread specific aligned and allocated memory (for distance
     // calculations we need aligned data)
     float query_norm = 0;
@@ -1450,6 +1459,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         pq_query_scratch->initialize(this->_data_dim, aligned_query_T);
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 4. Prefetch Data Buffer
+    ////////////////////////////////////////////////////////////////////////////////////
     // pointers to buffers for data
     T *data_buf = query_scratch->coord_scratch;
     _mm_prefetch((char *)data_buf, _MM_HINT_T1);
@@ -1460,6 +1472,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     const uint64_t num_sectors_per_node =
         _nnodes_per_sector > 0 ? 1 : DIV_ROUND_UP(_max_node_len, defaults::SECTOR_LEN);
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 5. PQ table and make Distance Calculation function
+    ////////////////////////////////////////////////////////////////////////////////////
     // query <-> PQ chunk centers distances
     _pq_table.preprocess_query(query_rotated); // center the query and rotate if
                                                // we have a rotation matrix
@@ -1476,6 +1491,10 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         diskann::aggregate_coords(ids, n_ids, this->data, this->_n_chunks, pq_coord_scratch);
         diskann::pq_dist_lookup(pq_coord_scratch, n_ids, this->_n_chunks, pq_dists, dists_out);
     };
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 6. Timer and State Initialization
+    ////////////////////////////////////////////////////////////////////////////////////
     Timer query_timer, io_timer, cpu_timer;
 
     tsl::robin_set<uint64_t> &visited = query_scratch->visited;
@@ -1483,6 +1502,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     retset.reserve(l_search);
     std::vector<Neighbor> &full_retset = query_scratch->full_retset;
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 7. Medoid Selection
+    ////////////////////////////////////////////////////////////////////////////////////
     uint32_t best_medoid = 0;
     float best_dist = (std::numeric_limits<float>::max)();
     if (!use_filter)
@@ -1522,6 +1544,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 8. Initial Step for Beam Search
+    ////////////////////////////////////////////////////////////////////////////////////
     compute_dists(&best_medoid, 1, dist_scratch);
     retset.insert(Neighbor(best_medoid, dist_scratch[0]));
     visited.insert(best_medoid);
@@ -1530,6 +1555,13 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     uint32_t hops = 0;
     uint32_t num_ios = 0;
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 9. Search Loop
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 9.1 변수 초기화
+    ////////////////////////////////////////////////////////////////////////////////////
     // cleared every iteration
     std::vector<uint32_t> frontier;
     frontier.reserve(2 * beam_width);
@@ -1540,6 +1572,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     std::vector<std::pair<uint32_t, std::pair<uint32_t, uint32_t *>>> cached_nhoods;
     cached_nhoods.reserve(2 * beam_width);
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 9.2 reset에 더이상 의미 있는 node가 없을 때까지 반복 && io_limit을 넘지 않을 때까지 반복
+    ////////////////////////////////////////////////////////////////////////////////////
     while (retset.has_unexpanded_node() && num_ios < io_limit)
     {
         // clear iteration state
@@ -1548,6 +1583,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         frontier_read_reqs.clear();
         cached_nhoods.clear();
         sector_scratch_idx = 0;
+        ////////////////////////////////////////////////////////////////////////////////
+        // 9.2.1 find New beam using retset
+        ////////////////////////////////////////////////////////////////////////////////
         // find new beam
         uint32_t num_seen = 0;
         while (retset.has_unexpanded_node() && frontier.size() < beam_width && num_seen < beam_width)
@@ -1557,6 +1595,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             auto iter = _nhood_cache.find(nbr.id);
             if (iter != _nhood_cache.end())
             {
+                // nbr이 _nhood_cache에 있으면 cached_nhoods에 넣어준다.
                 cached_nhoods.push_back(std::make_pair(nbr.id, iter->second));
                 if (stats != nullptr)
                 {
@@ -1565,6 +1604,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             }
             else
             {
+                // nbr이 _nhood_cache에 없으면 frontier에 넣어준다.
                 frontier.push_back(nbr.id);
             }
             if (this->_count_visited_nodes)
@@ -1573,6 +1613,9 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////
+        // 9.2.2 read neighborhood of all nodes in frontier
+        ////////////////////////////////////////////////////////////////////////////////
         // read nhoods of frontier ids
         if (!frontier.empty())
         {
@@ -1608,6 +1651,12 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////
+        // 9.2.3 process cached nhoods
+        // - cached_nhoods ard created by 9.2.1 find New beam using retset
+        // - cached_nhood안에 있는 node 들에 대해서, query 까지의 거리를 계산한
+        // - cached_nhood와 인접한 node들에 대해서, query 까지의 거리를 계산한 후, retset에 넣어준다.
+        ////////////////////////////////////////////////////////////////////////////////
         // process cached nhoods
         for (auto &cached_nhood : cached_nhoods)
         {
@@ -1659,6 +1708,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                 }
             }
         }
+
 #ifdef USE_BING_INFRA
         // process each frontier nhood - compute distances to unvisited nodes
         int completedIndex = -1;
@@ -1666,13 +1716,19 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         // If we issued read requests and if a read is complete or there are
         // reads in wait state, then enter the while loop.
         while (requestCount > 0 && getNextCompletedRequest(reader, ctx, requestCount, completedIndex))
+#else
+        ////////////////////////////////////////////////////////////////////////////////
+        // 9.2.4 process each frontier nhood - compute distances to unvisited nodes
+        // - frontier_nhoods ard created by 9.2.2 read neighborhood of all nodes in frontier
+        // - frontier_nhood 에 대해서, query 까지의 거리를 계산한
+        ////////////////////////////////////////////////////////////////////////////////
+        for (auto &frontier_nhood : frontier_nhoods)
+#endif
         {
+#ifdef USE_BING_INFRA
             assert(completedIndex >= 0);
             auto &frontier_nhood = frontier_nhoods[completedIndex];
             (*ctx.m_pRequestsStatus)[completedIndex] = IOContext::PROCESS_COMPLETE;
-#else
-        for (auto &frontier_nhood : frontier_nhoods)
-        {
 #endif
             char *node_disk_buf = offset_to_node(frontier_nhood.second, frontier_nhood.first);
             uint32_t *node_buf = offset_to_node_nhood(node_disk_buf);

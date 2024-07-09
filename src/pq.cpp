@@ -10,7 +10,7 @@
 #include "math_utils.h"
 #include "tsl/robin_map.h"
 
-#define HYUK_DEBUG true
+#define HYUK_DEBUG false
 
 // block size for reading/processing large files and matrices in blocks
 #define BLOCK_SIZE 5000000
