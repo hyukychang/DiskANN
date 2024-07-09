@@ -1341,7 +1341,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 #if HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
-    diskann::cout << splitter << "[debug by hyuk] running cached_beam_search : 1" << splitter << "\n";
+    // diskann::cout << splitter << "[debug by hyuk] running cached_beam_search : 1" << splitter << "\n";
 #endif
     cached_beam_search(query1, k_search, l_search, indices, distances, beam_width, std::numeric_limits<uint32_t>::max(),
                        use_reorder_data, stats);
@@ -1359,7 +1359,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 #if HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
-    diskann::cout << splitter << "[debug by hyuk] running cached_beam_search : 2" << splitter << "\n";
+    // diskann::cout << splitter << "[debug by hyuk] running cached_beam_search : 2" << splitter << "\n";
 #endif
     cached_beam_search(query1, k_search, l_search, indices, distances, beam_width, use_filter, filter_label,
                        std::numeric_limits<uint32_t>::max(), use_reorder_data, stats);
@@ -1377,7 +1377,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 #if HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
-    diskann::cout << splitter << "[debug by hyuk] running cached_beam_search : 3" << splitter << "\n";
+    // diskann::cout << splitter << "[debug by hyuk] running cached_beam_search : 3" << splitter << "\n";
 #endif
     LabelT dummy_filter = 0;
     cached_beam_search(query1, k_search, l_search, indices, distances, beam_width, false, dummy_filter, io_limit,
@@ -1396,7 +1396,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 #if HYUK_DEBUG
     const std::string splitter = "\n############################################################################"
                                  "####################################\n";
-    diskann::cout << splitter << "[debug by hyuk] running main cached_beam_search" << splitter << "\n";
+    // diskann::cout << splitter << "[debug by hyuk] running main cached_beam_search" << splitter << "\n";
 #endif
     ////////////////////////////////////////////////////////////////////////////////////
     // 1. check if beam_width is valid
