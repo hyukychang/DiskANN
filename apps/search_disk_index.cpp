@@ -28,7 +28,7 @@
 #endif
 
 #define WARMUP false
-#define HYUK_DEBUG false
+#define HYUK_DEBUG true
 
 namespace po = boost::program_options;
 
@@ -269,16 +269,6 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
 #pragma omp parallel for schedule(dynamic, 1)
         for (int64_t i = 0; i < (int64_t)query_num; i++)
         {
-#if HYUK_DEBUG
-            if (i == 0)
-            {
-                diskann::cout << splitter << "[debug by hyuk] going to execute query : " << i << splitter << "\n";
-            }
-            else
-            {
-                continue;
-            }
-#endif
             if (!filtered_search)
             {
                 _pFlashIndex->cached_beam_search(query + (i * query_aligned_dim), recall_at, L,
