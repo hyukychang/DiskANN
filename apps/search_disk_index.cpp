@@ -330,7 +330,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         auto mean_pq_preprocess_count = diskann::get_mean_stats<uint32_t>(
             stats, query_num, [](const diskann::QueryStats &stats) { return stats.pq_preprocess_count; });
         auto mean_pq_preprocess_time = diskann::get_mean_stats<float>(
-            stats, query_num, [] const(diskann::QueryStats & stats) { return stats.pq_preprocess_time; });
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.pq_preprocess_time; });
         auto mean_medoid_selection_count = diskann::get_mean_stats<uint32_t>(
             stats, query_num, [](const diskann::QueryStats &stats) { return stats.medoid_selection_count; });
         // 사실상 count= 1일거라서 그냥 return 해도 상관은 없지만, 혹시 모르니까 count로 나눠야 할 수 도 있음
