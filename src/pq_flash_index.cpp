@@ -1418,6 +1418,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     // reset query scratch
     query_scratch->reset();
 
+    auto time_1 = std::chrono::high_resolution_clock::now();
     ////////////////////////////////////////////////////////////////////////////////////
     // 3. Query normalization
     ////////////////////////////////////////////////////////////////////////////////////
@@ -1458,7 +1459,10 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         }
         pq_query_scratch->initialize(this->_data_dim, aligned_query_T);
     }
-
+    auto time_2 = std::chrono::high_resolution_clock::now();
+    diskann::cout << "Query normalization time: "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(time_2 - time_1).count()
+                  << " ms >> query_normalize_time.txt" << std::endl;
     ////////////////////////////////////////////////////////////////////////////////////
     // 4. Prefetch Data Buffer
     ////////////////////////////////////////////////////////////////////////////////////
