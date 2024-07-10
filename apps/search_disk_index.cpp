@@ -226,11 +226,11 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     //               << "Mean Frontier Load Count" << std::setw(16) << "Mean Frontier Load Time" << std::setw(16)
     //               << "Mean Cache Search Count" << std::setw(16) << "Mean Cache Search Time" << std::setw(16)
     //               << "Mean Frontier Search Count" << std::setw(16) << "Mean Frontier Search Time";
-    diskann::cout << set::setw(26) << "avg_normalize_t" << set::setw(26) << "avg_pq_preprocess_t" << set::setw(26)
-                  << "avg_medoid_select_t" << set::setw(26) << "avg_search_t" << set::setw(26) << "avg_beam_search_t"
-                  << set::setw(26) << "avg_beam_search_num" << set::setw(26) << "avg_frontier_load_t" << set::setw(26)
-                  << "avg_frontier_load_num" << set::setw(26) << "avg_cache_search_t" << set::setw(26)
-                  << "avg_cache_search_num" << set::setw(26) << "avg_frontier_search_t" << set::setw(26)
+    diskann::cout << std::setw(26) << "avg_normalize_t" << std::setw(26) << "avg_pq_preprocess_t" << std::setw(26)
+                  << "avg_medoid_select_t" << std::setw(26) << "avg_search_t" << std::setw(26) << "avg_beam_search_t"
+                  << std::setw(26) << "avg_beam_search_num" << std::setw(26) << "avg_frontier_load_t" << std::setw(26)
+                  << "avg_frontier_load_num" << std::setw(26) << "avg_cache_search_t" << std::setw(26)
+                  << "avg_cache_search_num" << std::setw(26) << "avg_frontier_search_t" << std::setw(26)
                   << "avg_frontier_search_num";
     if (calc_recall_flag)
     {
