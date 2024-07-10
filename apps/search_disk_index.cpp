@@ -226,10 +226,10 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     //               << "Mean Frontier Load Count" << std::setw(16) << "Mean Frontier Load Time" << std::setw(16)
     //               << "Mean Cache Search Count" << std::setw(16) << "Mean Cache Search Time" << std::setw(16)
     //               << "Mean Frontier Search Count" << std::setw(16) << "Mean Frontier Search Time";
-    diskann::cout << std::setw(26) << "Mean Normalize Time" << std::setw(26) << "Mean PQ Preprocess Time"
-                  << std::setw(26) << "Mean Medoid Selection Time" << std::setw(26) << "Mean Search Time"
-                  << std::setw(26) << "Mean Beam Search Time" << std::setw(26) << "Mean Frontier Load Time"
-                  << std::setw(26) << "Mean Cache Search Time" << std::setw(26) << "Mean Frontier Search Time";
+    diskann::cout << std::setw(30) << "Mean Normalize Time" << std::setw(30) << "Mean PQ Preprocess Time"
+                  << std::setw(30) << "Mean Medoid Selection Time" << std::setw(30) << "Mean Search Time"
+                  << std::setw(30) << "Mean Beam Search Time" << std::setw(30) << "Mean Frontier Load Time"
+                  << std::setw(30) << "Mean Cache Search Time" << std::setw(30) << "Mean Frontier Search Time";
     if (calc_recall_flag)
     {
         diskann::cout << std::setw(16) << recall_string << std::endl;
@@ -237,6 +237,9 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     else
         diskann::cout << std::endl;
     diskann::cout << "==============================================================="
+                     "======================================================="
+                     "======================================================="
+                     "======================================================="
                      "======================================================="
                   << std::endl;
 
@@ -392,10 +395,10 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         //               << mean_frontier_load_count << std::setw(16) << mean_frontier_load_time << std::setw(16)
         //               << mean_cache_search_count << std::setw(16) << mean_cache_search_time << std::setw(16)
         //               << mean_frontier_search_count << std::setw(16) << mean_frontier_search_time;
-        diskann::cout << std::setw(26) << mean_normalize_time << std::setw(26) << mean_pq_preprocess_time
-                      << std::setw(26) << mean_medoid_selection_time << std::setw(26) << mean_search_time
-                      << std::setw(26) << mean_beam_search_time << std::setw(26) << mean_frontier_load_time
-                      << std::setw(26) << mean_cache_search_time << std::setw(26) << mean_frontier_search_time;
+        diskann::cout << std::setw(30) << mean_normalize_time << std::setw(30) << mean_pq_preprocess_time
+                      << std::setw(30) << mean_medoid_selection_time << std::setw(30) << mean_search_time
+                      << std::setw(30) << mean_beam_search_time << std::setw(30) << mean_frontier_load_time
+                      << std::setw(30) << mean_cache_search_time << std::setw(30) << mean_frontier_search_time;
 
         if (calc_recall_flag)
         {
