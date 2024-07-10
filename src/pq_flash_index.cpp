@@ -1418,7 +1418,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     // reset query scratch
     query_scratch->reset();
 
-    auto time_1 = std::chrono::high_resolution_clock::now();
+    auto query_normalize_time_start = std::chrono::high_resolution_clock::now();
     ////////////////////////////////////////////////////////////////////////////////////
     // 3. Query normalization
     ////////////////////////////////////////////////////////////////////////////////////
@@ -1459,10 +1459,11 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         }
         pq_query_scratch->initialize(this->_data_dim, aligned_query_T);
     }
-    auto time_2 = std::chrono::high_resolution_clock::now();
-    diskann::cout << "Query normalization time: "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(time_2 - time_1).count()
-                  << " ms >> query_normalize_time.txt" << std::endl;
+    auto query_normalize_time_end = std::chrono::high_resolution_clock::now();
+    stats->normalize_time +=
+        std::chrono::duration_cast<std::chrono::nanoseconds>(query_normalize_time_end - query_normalize_time_start)
+            .count();
+    stats->normalize_count += 1;
     ////////////////////////////////////////////////////////////////////////////////////
     // 4. Prefetch Data Buffer
     ////////////////////////////////////////////////////////////////////////////////////
@@ -1480,10 +1481,16 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     // 5. PQ table and make Distance Calculation function
     ////////////////////////////////////////////////////////////////////////////////////
     // query <-> PQ chunk centers distances
+    auto pq_preprocess_time_start = std::chrono::high_resolution_clock::now();
     _pq_table.preprocess_query(query_rotated); // center the query and rotate if
                                                // we have a rotation matrix
     float *pq_dists = pq_query_scratch->aligned_pqtable_dist_scratch;
     _pq_table.populate_chunk_distances(query_rotated, pq_dists);
+
+    auto pq_preprocess_time_end = std::chrono::high_resolution_clock::now();
+    stats->pq_preprocess_time +=
+        std::chrono::duration_cast<std::chrono::nanoseconds>(pq_preprocess_time_end - pq_preprocess_time_start).count();
+    stats->pq_preprocess_count += 1;
 
     // query <-> neighbor list
     float *dist_scratch = pq_query_scratch->aligned_dist_scratch;
@@ -1510,6 +1517,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     // 7. Medoid Selection
     ////////////////////////////////////////////////////////////////////////////////////
     uint32_t best_medoid = 0;
+    auto medoid_selection_time_start = std::chrono::high_resolution_clock::now();
     float best_dist = (std::numeric_limits<float>::max)();
     if (!use_filter)
     {
@@ -1548,6 +1556,12 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         }
     }
 
+    auto medoid_selection_time_end = std::chrono::high_resolution_clock::now();
+    stats->medoid_selection_time =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(medoid_selection_time_end - medoid_selection_time_start)
+            .count();
+    stats->medoid_selection_count += 1;
+
     ////////////////////////////////////////////////////////////////////////////////////
     // 8. Initial Step for Beam Search
     ////////////////////////////////////////////////////////////////////////////////////
@@ -1576,6 +1590,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     std::vector<std::pair<uint32_t, std::pair<uint32_t, uint32_t *>>> cached_nhoods;
     cached_nhoods.reserve(2 * beam_width);
 
+    auto search_time_start = std::chrono::high_resolution_clock::now();
     ////////////////////////////////////////////////////////////////////////////////////
     // 9.2 reset에 더이상 의미 있는 node가 없을 때까지 반복 && io_limit을 넘지 않을 때까지 반복
     ////////////////////////////////////////////////////////////////////////////////////
@@ -1592,6 +1607,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         ////////////////////////////////////////////////////////////////////////////////
         // find new beam
         uint32_t num_seen = 0;
+        auto time_beam_start = std::chrono::high_resolution_clock::now();
         while (retset.has_unexpanded_node() && frontier.size() < beam_width && num_seen < beam_width)
         {
             auto nbr = retset.closest_unexpanded();
@@ -1616,11 +1632,15 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                 reinterpret_cast<std::atomic<uint32_t> &>(this->_node_visit_counter[nbr.id].second).fetch_add(1);
             }
         }
-
+        auto time_beam_end = std::chrono::high_resolution_clock::now();
+        stats->beam_search_time +=
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_beam_end - time_beam_start).count();
+        stats->beam_search_count += 1;
         ////////////////////////////////////////////////////////////////////////////////
         // 9.2.2 read neighborhood of all nodes in frontier
         ////////////////////////////////////////////////////////////////////////////////
         // read nhoods of frontier ids
+        auto time_load_start = std::chrono::high_resolution_clock::now();
         if (!frontier.empty())
         {
             if (stats != nullptr)
@@ -1655,6 +1675,10 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             }
         }
 
+        auto time_load_end = std::chrono::high_resolution_clock::now();
+        stats->frontier_load_time +=
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_load_end - time_load_start).count();
+        stats->frontier_load_count += 1;
         ////////////////////////////////////////////////////////////////////////////////
         // 9.2.3 process cached nhoods
         // - cached_nhoods ard created by 9.2.1 find New beam using retset
@@ -1662,6 +1686,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         // - cached_nhood와 인접한 node들에 대해서, query 까지의 거리를 계산한 후, retset에 넣어준다.
         ////////////////////////////////////////////////////////////////////////////////
         // process cached nhoods
+        auto time_cached_start = std::chrono::high_resolution_clock::now();
         for (auto &cached_nhood : cached_nhoods)
         {
             auto global_cache_iter = _coord_cache.find(cached_nhood.first);
@@ -1712,7 +1737,12 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                 }
             }
         }
+        auto time_cached_end = std::chrono::high_resolution_clock::now();
+        stats->cache_search_time +=
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_cached_end - time_cached_start).count();
+        stats->cache_search_count += 1;
 
+        auto time_frontier_search_start = std::chrono::high_resolution_clock::now();
 #ifdef USE_BING_INFRA
         // process each frontier nhood - compute distances to unvisited nodes
         int completedIndex = -1;
@@ -1792,9 +1822,18 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                 stats->cpu_us += (float)cpu_timer.elapsed();
             }
         }
+        auto time_frontier_search_end = std::chrono::high_resolution_clock::now();
+        stats->frontier_search_time +=
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_frontier_search_end - time_frontier_search_start)
+                .count();
+        stats->frontier_search_count += 1;
 
         hops++;
     }
+    auto search_time_end = std::chrono::high_resolution_clock::now();
+    stats->search_time +=
+        std::chrono::duration_cast<std::chrono::nanoseconds>(search_time_end - search_time_start).count();
+    stats->search_count += 1;
 
     // re-sort by distance
     std::sort(full_retset.begin(), full_retset.end());

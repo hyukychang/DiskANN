@@ -33,6 +33,23 @@ struct QueryStats
     unsigned n_cmps = 0;       // # cmps
     unsigned n_cache_hits = 0; // # cache_hits
     unsigned n_hops = 0;       // # search hops
+
+    float normalize_time = 0;            // in nanoseconds
+    unsigned normalize_count = 0;        // # of normalizations
+    float pq_preprocess_time = 0;        // in nanoseconds
+    unsigned pq_preprocess_count = 0;    // # of pq_preprocess
+    float medoid_selection_time = 0;     // in nano seconds
+    unsigned medoid_selection_count = 0; // # of medoid_selection
+    float search_time = 0;               // in nanoseconds
+    unsigned search_count = 0;           // # of searches
+    float beam_search_time = 0;          // in nanoseconds
+    unsigned beam_search_count = 0;      // # of beam_search
+    float frontier_load_time = 0;        // in nanoseconds
+    unsigned frontier_load_count = 0;    // # of frontier_load
+    float cache_search_time = 0;         // in nanoseconds
+    unsigned cache_search_count = 0;     // # of cache_search
+    float frontier_search_time = 0;      // in nanoseconds
+    unsigned frontier_search_count = 0;  // # of frontier_search
 };
 
 template <typename T>
