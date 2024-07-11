@@ -231,7 +231,8 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                   << std::setw(26) << "avg_beam_search_num" << std::setw(26) << "avg_frontier_load_t" << std::setw(26)
                   << "avg_frontier_load_num" << std::setw(26) << "avg_cache_search_t" << std::setw(26)
                   << "avg_cache_search_num" << std::setw(26) << "avg_frontier_search_t" << std::setw(26)
-                  << "avg_frontier_search_num";
+                  << "avg_frontier_search_num" << std::setw(26) << "avg_data_process_t" << std::setw(26)
+                  << "avg_data_process_num";
     if (calc_recall_flag)
     {
         diskann::cout << std::setw(16) << recall_string << std::endl;
@@ -239,6 +240,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     else
         diskann::cout << std::endl;
     diskann::cout << "==============================================================="
+                     "======================================================="
                      "======================================================="
                      "======================================================="
                      "======================================================="
@@ -377,6 +379,12 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
             diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
                 return stats.frontier_search_time / stats.frontier_search_count;
             });
+        auto mean_data_process_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.data_process_count; });
+        auto mean_data_process_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.data_process_time / stats.data_process_count;
+            });
 
         double recall = 0;
         if (calc_recall_flag)
@@ -404,7 +412,8 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                       << std::setw(26) << mean_beam_search_time << std::setw(26) << mean_beam_search_count
                       << std::setw(26) << mean_frontier_load_time << std::setw(26) << mean_frontier_load_count
                       << std::setw(26) << mean_cache_search_time << std::setw(26) << mean_cache_search_count
-                      << std::setw(26) << mean_frontier_search_time << std::setw(26) << mean_frontier_search_count;
+                      << std::setw(26) << mean_frontier_search_time << std::setw(26) << mean_frontier_search_count
+                      << std::setw(26) << mean_data_process_time << std::setw(26) << mean_data_process_count;
 
         if (calc_recall_flag)
         {

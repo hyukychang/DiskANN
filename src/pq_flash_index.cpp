@@ -1764,11 +1764,19 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             auto &frontier_nhood = frontier_nhoods[completedIndex];
             (*ctx.m_pRequestsStatus)[completedIndex] = IOContext::PROCESS_COMPLETE;
 #endif
+            auto time_data_process_start = std::chrono::high_resolution_clock::now();
             char *node_disk_buf = offset_to_node(frontier_nhood.second, frontier_nhood.first);
             uint32_t *node_buf = offset_to_node_nhood(node_disk_buf);
             uint64_t nnbrs = (uint64_t)(*node_buf);
             T *node_fp_coords = offset_to_node_coords(node_disk_buf);
             memcpy(data_buf, node_fp_coords, _disk_bytes_per_point);
+
+            auto time_data_process_end = std::chrono::high_resolution_clock::now();
+            stats->data_process_time +=
+                std::chrono::duration_cast<std::chrono::nanoseconds>(time_data_process_end - time_data_process_start)
+                    .count();
+            stats->data_process_count += 1;
+
             float cur_expanded_dist;
             if (!_use_disk_index_pq)
             {

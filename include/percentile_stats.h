@@ -50,6 +50,8 @@ struct QueryStats
     unsigned cache_search_count = 0;     // # of cache_search
     float frontier_search_time = 0;      // in nanoseconds
     unsigned frontier_search_count = 0;  // # of frontier_search
+    float data_process_time = 0;         // in nanoseconds
+    unsigned data_process_count = 0;     // # of data_process
 };
 
 template <typename T>
