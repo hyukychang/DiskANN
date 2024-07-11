@@ -226,9 +226,10 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     //               << "Mean Frontier Load Count" << std::setw(16) << "Mean Frontier Load Time" << std::setw(16)
     //               << "Mean Cache Search Count" << std::setw(16) << "Mean Cache Search Time" << std::setw(16)
     //               << "Mean Frontier Search Count" << std::setw(16) << "Mean Frontier Search Time";
-    diskann::cout << std::setw(26) << "avg_normalize_t" << std::setw(26) << "avg_pq_preprocess_t" << std::setw(26)
-                  << "avg_medoid_select_t" << std::setw(26) << "avg_search_t" << std::setw(26) << "avg_beam_search_t"
-                  << std::setw(26) << "avg_beam_search_num" << std::setw(26) << "avg_frontier_load_t" << std::setw(26)
+    // diskann::cout << std::setw(26) << "avg_normalize_t" << std::setw(26) << "avg_pq_preprocess_t" << std::setw(26)
+    //               << "avg_medoid_select_t";
+    diskann::cout << std::setw(26) << "avg_search_t" << std::setw(26) << "avg_beam_search_t" << std::setw(26)
+                  << "avg_beam_search_num" << std::setw(26) << "avg_frontier_load_t" << std::setw(26)
                   << "avg_frontier_load_num" << std::setw(26) << "avg_cache_search_t" << std::setw(26)
                   << "avg_cache_search_num" << std::setw(26) << "avg_frontier_search_t" << std::setw(26)
                   << "avg_frontier_search_num" << std::setw(26) << "avg_data_process_t" << std::setw(26)
@@ -405,7 +406,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
             });
         auto mean_frontier_nnbrs =
             diskann::get_mean_stats<uint32_t>(stats, query_num, [](const diskann::QueryStats &stats) {
-                return stats.frontier_nnbrs / stats.frontier_search_cou;
+                return stats.frontier_nnbrs / stats.frontier_search_count;
             });
 
         double recall = 0;
@@ -429,13 +430,15 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         //               << mean_frontier_load_count << std::setw(16) << mean_frontier_load_time << std::setw(16)
         //               << mean_cache_search_count << std::setw(16) << mean_cache_search_time << std::setw(16)
         //               << mean_frontier_search_count << std::setw(16) << mean_frontier_search_time;
-        diskann::cout << std::setw(26) << mean_normalize_time << std::setw(26) << mean_pq_preprocess_time
-                      << std::setw(26) << mean_medoid_selection_time << std::setw(26) << mean_search_time
-                      << std::setw(26) << mean_beam_search_time << std::setw(26) << mean_beam_search_count
-                      << std::setw(26) << mean_frontier_load_time << std::setw(26) << mean_frontier_load_count
-                      << std::setw(26) << mean_cache_search_time << std::setw(26) << mean_cache_search_count
-                      << std::setw(26) << mean_frontier_search_time << std::setw(26) << mean_frontier_search_count
-                      << std::setw(26) << mean_data_process_time << std::setw(26) << mean_data_process_count;
+        // diskann::cout << std::setw(26) << mean_normalize_time << std::setw(26) << mean_pq_preprocess_time
+        //               << std::setw(26) << mean_medoid_selection_time;
+
+        diskann::cout << std::setw(26) << mean_search_time << std::setw(26) << mean_beam_search_time << std::setw(26)
+                      << mean_beam_search_count << std::setw(26) << mean_frontier_load_time << std::setw(26)
+                      << mean_frontier_load_count << std::setw(26) << mean_cache_search_time << std::setw(26)
+                      << mean_cache_search_count << std::setw(26) << mean_frontier_search_time << std::setw(26)
+                      << mean_frontier_search_count << std::setw(26) << mean_data_process_time << std::setw(26)
+                      << mean_data_process_count;
         diskann::cout << std::setw(26) << mean_cache_insert_time << std::setw(26) << mean_frontier_insert_time;
         diskann::cout << std::setw(16) << mean_cache_nnbrs << std::setw(16) << mean_frontier_nnbrs;
 
