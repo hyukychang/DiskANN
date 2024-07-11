@@ -1735,6 +1735,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                     float dist = dist_scratch[m];
                     Neighbor nn(id, dist);
                     retset.insert(nn);
+                    stats->cache_insert_count += 1;
                 }
             }
             auto cache_time_data_process_end = std::chrono::high_resolution_clock::now();
@@ -1829,6 +1830,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 
                     Neighbor nn(id, dist);
                     retset.insert(nn);
+                    stats->frontier_insert_count += 1;
                 }
             }
             auto frontier_time_data_process_end = std::chrono::high_resolution_clock::now();
