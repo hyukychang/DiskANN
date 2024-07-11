@@ -1742,6 +1742,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                             cache_time_data_process_end - cache_time_data_process_start)
                                             .count();
             stats->cache_search_count += 1;
+            stats->cache_nnbrs += nnbrs;
         }
         auto time_cached_end = std::chrono::high_resolution_clock::now();
         stats->cache_search_time +=
@@ -1840,6 +1841,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                 stats->cpu_us += (float)cpu_timer.elapsed();
             }
             stats->frontier_search_count += 1;
+            stats->frontier_nnbrs += nnbrs;
         }
         auto time_frontier_search_end = std::chrono::high_resolution_clock::now();
         stats->frontier_search_time +=

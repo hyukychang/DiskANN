@@ -49,6 +49,8 @@ struct QueryStats
     float cache_search_time = 0;              // in nanoseconds
     unsigned cache_search_count = 0;          // # of cache_search
     float cache_insert_time = 0;              // in nanoseconds
+    unsigned cache_nnbrs = 0;                 // # of nbrs of node in cache
+    unsigned frontier_nnbrs = 0;              // # of nbrs of node in frontiers
     float frontier_insert_time = 0;           // in nanoseconds
     float frontier_search_time = 0;           // in nanoseconds
     unsigned frontier_search_count = 0;       // # of frontier_search
