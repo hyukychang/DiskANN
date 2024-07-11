@@ -1669,6 +1669,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 #else
             reader->read(frontier_read_reqs, ctx); // synchronous IO linux
 #endif
+            stats->frontier_load_count += 1;
             if (stats != nullptr)
             {
                 stats->io_us += (float)io_timer.elapsed();
@@ -1678,7 +1679,6 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         auto time_load_end = std::chrono::high_resolution_clock::now();
         stats->frontier_load_time +=
             std::chrono::duration_cast<std::chrono::nanoseconds>(time_load_end - time_load_start).count();
-        stats->frontier_load_count += 1;
         ////////////////////////////////////////////////////////////////////////////////
         // 9.2.3 process cached nhoods
         // - cached_nhoods ard created by 9.2.1 find New beam using retset
@@ -1736,11 +1736,11 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                     retset.insert(nn);
                 }
             }
+            stats->cache_search_count += 1;
         }
         auto time_cached_end = std::chrono::high_resolution_clock::now();
         stats->cache_search_time +=
             std::chrono::duration_cast<std::chrono::nanoseconds>(time_cached_end - time_cached_start).count();
-        stats->cache_search_count += 1;
 
         auto time_frontier_search_start = std::chrono::high_resolution_clock::now();
 #ifdef USE_BING_INFRA
@@ -1772,10 +1772,10 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             memcpy(data_buf, node_fp_coords, _disk_bytes_per_point);
 
             auto time_data_process_end = std::chrono::high_resolution_clock::now();
-            stats->data_process_time +=
+            stats->frontier_data_process_time +=
                 std::chrono::duration_cast<std::chrono::nanoseconds>(time_data_process_end - time_data_process_start)
                     .count();
-            stats->data_process_count += 1;
+            stats->frontier_data_process_count += 1;
 
             float cur_expanded_dist;
             if (!_use_disk_index_pq)
@@ -1829,12 +1829,12 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             {
                 stats->cpu_us += (float)cpu_timer.elapsed();
             }
+            stats->frontier_search_count += 1;
         }
         auto time_frontier_search_end = std::chrono::high_resolution_clock::now();
         stats->frontier_search_time +=
             std::chrono::duration_cast<std::chrono::nanoseconds>(time_frontier_search_end - time_frontier_search_start)
                 .count();
-        stats->frontier_search_count += 1;
 
         hops++;
     }

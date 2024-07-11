@@ -380,10 +380,10 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                 return stats.frontier_search_time / stats.frontier_search_count;
             });
         auto mean_data_process_count = diskann::get_mean_stats<uint32_t>(
-            stats, query_num, [](const diskann::QueryStats &stats) { return stats.data_process_count; });
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.frontier_data_process_count; });
         auto mean_data_process_time =
             diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
-                return stats.data_process_time / stats.data_process_count;
+                return stats.frontier_data_process_time / stats.frontier_data_process_count;
             });
 
         double recall = 0;
