@@ -1719,6 +1719,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             }
 
             // process prefetched nhood
+            auto cache_time_data_process_start = std::chrono::high_resolution_clock::now();
             for (uint64_t m = 0; m < nnbrs; ++m)
             {
                 uint32_t id = node_nbrs[m];
@@ -1736,6 +1737,10 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                     retset.insert(nn);
                 }
             }
+            auto cache_time_data_process_end = std::chrono::high_resolution_clock::now();
+            stats->cache_insert_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                            cache_time_data_process_end - cache_time_data_process_start)
+                                            .count();
             stats->cache_search_count += 1;
         }
         auto time_cached_end = std::chrono::high_resolution_clock::now();
@@ -1802,6 +1807,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 
             cpu_timer.reset();
             // process prefetch-ed nhood
+            auto frontier_time_data_process_start = std::chrono::high_resolution_clock::now();
             for (uint64_t m = 0; m < nnbrs; ++m)
             {
                 uint32_t id = node_nbrs[m];
@@ -1824,6 +1830,10 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                     retset.insert(nn);
                 }
             }
+            auto frontier_time_data_process_end = std::chrono::high_resolution_clock::now();
+            stats->frontier_insert_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                               frontier_time_data_process_end - frontier_time_data_process_start)
+                                               .count();
 
             if (stats != nullptr)
             {

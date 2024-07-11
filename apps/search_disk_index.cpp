@@ -233,6 +233,9 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                   << "avg_cache_search_num" << std::setw(26) << "avg_frontier_search_t" << std::setw(26)
                   << "avg_frontier_search_num" << std::setw(26) << "avg_data_process_t" << std::setw(26)
                   << "avg_data_process_num";
+
+    diskann::cout << std::setw(26) << "avg_cache_insert_t" << std::setw(26) << "avg_frontier_insert_t";
+
     if (calc_recall_flag)
     {
         diskann::cout << std::setw(16) << recall_string << std::endl;
@@ -386,6 +389,15 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                 return stats.frontier_data_process_time / stats.frontier_data_process_count;
             });
 
+        auto mean_cache_insert_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.cache_insert_time / stats.cache_search_count;
+            });
+        auto mean_frontier_insert_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.frontier_insert_time / stats.frontier_search_count;
+            });
+
         double recall = 0;
         if (calc_recall_flag)
         {
@@ -414,6 +426,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                       << std::setw(26) << mean_cache_search_time << std::setw(26) << mean_cache_search_count
                       << std::setw(26) << mean_frontier_search_time << std::setw(26) << mean_frontier_search_count
                       << std::setw(26) << mean_data_process_time << std::setw(26) << mean_data_process_count;
+        diskann::cout << std::setw(26) << mean_cache_insert_time << std::setw(26) << mean_frontier_insert_time;
 
         if (calc_recall_flag)
         {

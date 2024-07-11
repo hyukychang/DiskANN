@@ -48,7 +48,8 @@ struct QueryStats
     unsigned frontier_load_count = 0;         // # of frontier_load
     float cache_search_time = 0;              // in nanoseconds
     unsigned cache_search_count = 0;          // # of cache_search
-
+    float cache_insert_time = 0;              // in nanoseconds
+    float frontier_insert_time = 0;           // in nanoseconds
     float frontier_search_time = 0;           // in nanoseconds
     unsigned frontier_search_count = 0;       // # of frontier_search
     float frontier_data_process_time = 0;     // in nanoseconds
