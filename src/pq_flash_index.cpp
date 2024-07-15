@@ -25,6 +25,8 @@
 // sector # beyond the end of graph where data for id is present for reordering
 #define VECTOR_SECTOR_OFFSET(id) ((((uint64_t)(id)) % _nvecs_per_sector) * _data_dim * sizeof(float))
 
+#define HYUK_DEBUG true
+
 namespace diskann
 {
 
@@ -501,6 +503,11 @@ void PQFlashIndex<T, LabelT>::cache_bfs_levels(uint64_t num_nodes_to_cache, std:
 
 template <typename T, typename LabelT> void PQFlashIndex<T, LabelT>::use_medoids_data_as_centroids()
 {
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "##############################################################################\n";
+    diskann::cout << splitter << "[debug by hyuk] use_medoids_data_as_centroids" << splitter << "\n\n";
+#endif
     if (_centroid_data != nullptr)
         aligned_free(_centroid_data);
     alloc_aligned(((void **)&_centroid_data), _num_medoids * _aligned_dim * sizeof(float), 32);
@@ -545,6 +552,9 @@ template <typename T, typename LabelT> void PQFlashIndex<T, LabelT>::use_medoids
         }
         delete[] medoid_bufs[cur_m];
     }
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] Finish use_medoids_data_as_centroids" << splitter << "\n\n";
+#endif
 }
 
 template <typename T, typename LabelT>
@@ -775,6 +785,11 @@ int PQFlashIndex<T, LabelT>::load(MemoryMappedFiles &files, uint32_t num_threads
 template <typename T, typename LabelT> int PQFlashIndex<T, LabelT>::load(uint32_t num_threads, const char *index_prefix)
 {
 #endif
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    diskann::cout << splitter << "[debug by hyuk] start running load" << splitter << "\n\n";
+#endif
     std::string pq_table_bin = std::string(index_prefix) + "_pq_pivots.bin";
     std::string pq_compressed_vectors = std::string(index_prefix) + "_pq_compressed.bin";
     std::string _disk_index_file = std::string(index_prefix) + "_disk.index";
@@ -792,12 +807,16 @@ template <typename T, typename LabelT>
 int PQFlashIndex<T, LabelT>::load_from_separate_paths(diskann::MemoryMappedFiles &files, uint32_t num_threads,
                                                       const char *index_filepath, const char *pivots_filepath,
                                                       const char *compressed_filepath)
-{
 #else
 template <typename T, typename LabelT>
 int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, const char *index_filepath,
                                                       const char *pivots_filepath, const char *compressed_filepath)
+#endif
 {
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    diskann::cout << splitter << "[debug by hyuk] start running load_from_separate_paths" << splitter << "\n\n";
 #endif
     std::string pq_table_bin = pivots_filepath;
     std::string pq_compressed_vectors = compressed_filepath;
@@ -833,22 +852,34 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     this->_aligned_dim = ROUND_UP(pq_file_dim, 8);
 
     size_t npts_u64, nchunks_u64;
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] start running load_bin" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
     diskann::load_bin<uint8_t>(files, pq_compressed_vectors, this->data, npts_u64, nchunks_u64);
 #else
     diskann::load_bin<uint8_t>(pq_compressed_vectors, this->data, npts_u64, nchunks_u64);
 #endif
 
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] finish running load_bin" << splitter;
+#endif
+
     this->_num_points = npts_u64;
     this->_n_chunks = nchunks_u64;
 #ifdef EXEC_ENV_OLS
     if (files.fileExists(labels_file))
+#else
+    if (file_exists(labels_file))
+#endif
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter << "[debug by hyuk] label_file file exist" << splitter;
+#endif
+#ifdef EXEC_ENV_OLS
         FileContent &content_labels = files.getContent(labels_file);
         std::stringstream infile(std::string((const char *)content_labels._content, content_labels._size));
 #else
-    if (file_exists(labels_file))
-    {
         std::ifstream infile(labels_file, std::ios::binary);
         if (infile.fail())
         {
@@ -876,13 +907,18 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
         if (files.fileExists(labels_to_medoids))
+#else
+        if (file_exists(labels_to_medoids))
+#endif
         {
+#if HYUK_DEBUG
+            diskann::cout << splitter << "[debug by hyuk] labels_to_medoids file exist" << splitter;
+#endif
+#ifdef EXEC_ENV_OLS
             FileContent &content_labels_to_meoids = files.getContent(labels_to_medoids);
             std::stringstream medoid_stream(
                 std::string((const char *)content_labels_to_meoids._content, content_labels_to_meoids._size));
 #else
-        if (file_exists(labels_to_medoids))
-        {
             std::ifstream medoid_stream(labels_to_medoids);
             assert(medoid_stream.is_open());
 #endif
@@ -917,13 +953,18 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
         if (files.fileExists(univ_label_file))
+#else
+        if (file_exists(univ_label_file))
+#endif
         {
+#if HYUK_DEBUG
+            diskann::cout << splitter << "[debug by hyuk] univ_label_file file exist" << splitter;
+#endif
+#ifdef EXEC_ENV_OLS
             FileContent &content_univ_label = files.getContent(univ_label_file);
             std::stringstream universal_label_reader(
                 std::string((const char *)content_univ_label._content, content_univ_label._size));
 #else
-        if (file_exists(univ_label_file))
-        {
             std::ifstream universal_label_reader(univ_label_file);
             assert(universal_label_reader.is_open());
 #endif
@@ -938,13 +979,18 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
         if (files.fileExists(dummy_map_file))
+#else
+        if (file_exists(dummy_map_file))
+#endif
         {
+#if HYUK_DEBUG
+            diskann::cout << splitter << "[debug by hyuk] dummy_map_file file exist" << splitter;
+#endif
+#ifdef EXEC_ENV_OLS
             FileContent &content_dummy_map = files.getContent(dummy_map_file);
             std::stringstream dummy_map_stream(
                 std::string((const char *)content_dummy_map._content, content_dummy_map._size));
 #else
-        if (file_exists(dummy_map_file))
-        {
             std::ifstream dummy_map_stream(dummy_map_file);
             assert(dummy_map_stream.is_open());
 #endif
@@ -979,17 +1025,20 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
             diskann::cout << "Loaded dummy map" << std::endl;
         }
     }
-
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] load_pq_centroid_bin" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
     _pq_table.load_pq_centroid_bin(files, pq_table_bin.c_str(), nchunks_u64);
 #else
     _pq_table.load_pq_centroid_bin(pq_table_bin.c_str(), nchunks_u64);
 #endif
-
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] load_pq_centroid_bin finish" << splitter;
     diskann::cout << "Loaded PQ centroids and in-memory compressed vectors. #points: " << _num_points
                   << " #dim: " << _data_dim << " #aligned_dim: " << _aligned_dim << " #chunks: " << _n_chunks
                   << std::endl;
-
+#endif
     if (_n_chunks > MAX_PQ_CHUNKS)
     {
         std::stringstream stream;
@@ -1002,14 +1051,20 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     std::string disk_pq_pivots_path = this->_disk_index_file + "_pq_pivots.bin";
 #ifdef EXEC_ENV_OLS
     if (files.fileExists(disk_pq_pivots_path))
+#else
+    if (file_exists(disk_pq_pivots_path))
+#endif
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter << "[debug by hyuk] disk_pq_pivots_path file exist" << splitter
+                      << "[debug by hyuk] going to load disk_pq_centroid_bin" << splitter;
+#endif
+#ifdef EXEC_ENV_OLS
         _use_disk_index_pq = true;
         // giving 0 chunks to make the _pq_table infer from the
         // chunk_offsets file the correct value
         _disk_pq_table.load_pq_centroid_bin(files, disk_pq_pivots_path.c_str(), 0);
 #else
-    if (file_exists(disk_pq_pivots_path))
-    {
         _use_disk_index_pq = true;
         // giving 0 chunks to make the _pq_table infer from the
         // chunk_offsets file the correct value
@@ -1098,7 +1153,9 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         READ_U64(index_metadata, this->_ndims_reorder_vecs);
         READ_U64(index_metadata, this->_nvecs_per_sector);
     }
-
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] Printing disk-index file meta-data" << splitter;
+#endif
     diskann::cout << "Disk-Index File Meta-data: ";
     diskann::cout << "# nodes per sector: " << _nnodes_per_sector;
     diskann::cout << ", max node len (bytes): " << _max_node_len;
@@ -1110,8 +1167,15 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     index_metadata.close();
 #endif
 
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] close meta data" << splitter;
+#endif
+
 #ifndef EXEC_ENV_OLS
     // open AlignedFileReader handle to index_file
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] open AlignedFileReader handle to index_file" << splitter;
+#endif
     std::string index_fname(_disk_index_file);
     reader->open(index_fname);
     this->setup_thread_data(num_threads);
@@ -1121,12 +1185,18 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
     if (files.fileExists(medoids_file))
+#else
+    if (file_exists(medoids_file))
+#endif
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter << "[debug by hyuk] medoids_file exist" << splitter
+                      << "[debug by hyuk] start running load_bin" << splitter;
+#endif
+#ifdef EXEC_ENV_OLS
         size_t tmp_dim;
         diskann::load_bin<uint32_t>(files, norm_file, medoids_file, _medoids, _num_medoids, tmp_dim);
 #else
-    if (file_exists(medoids_file))
-    {
         size_t tmp_dim;
         diskann::load_bin<uint32_t>(medoids_file, _medoids, _num_medoids, tmp_dim);
 #endif
@@ -1141,11 +1211,10 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         }
 #ifdef EXEC_ENV_OLS
         if (!files.fileExists(centroids_file))
-        {
 #else
         if (!file_exists(centroids_file))
-        {
 #endif
+        {
             diskann::cout << "Centroid data file not found. Using corresponding vectors "
                              "for the medoids "
                           << std::endl;
@@ -1154,6 +1223,10 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
         else
         {
             size_t num_centroids, aligned_tmp_dim;
+#if HYUK_DEBUG
+            diskann::cout << splitter << "[debug by hyuk] centroids_file exist" << splitter
+                          << "[debug by hyuk] start running load_aligned_bin" << splitter;
+#endif
 #ifdef EXEC_ENV_OLS
             diskann::load_aligned_bin<float>(files, centroids_file, _centroid_data, num_centroids, tmp_dim,
                                              aligned_tmp_dim);
@@ -1175,6 +1248,9 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
     }
     else
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter << "[debug by hyuk] medoids_file does not exist" << splitter;
+#endif
         _num_medoids = 1;
         _medoids = new uint32_t[1];
         _medoids[0] = (uint32_t)(medoid_id_on_file);
@@ -1185,13 +1261,19 @@ int PQFlashIndex<T, LabelT>::load_from_separate_paths(uint32_t num_threads, cons
 
 #ifdef EXEC_ENV_OLS
     if (files.fileExists(norm_file) && metric == diskann::Metric::INNER_PRODUCT)
+#else
+    if (file_exists(norm_file) && metric == diskann::Metric::INNER_PRODUCT)
+#endif
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter << "[debug by hyuk] norm_file exist" << splitter
+                      << "[debug by hyuk] start running load_bin" << splitter;
+#endif
+#ifdef EXEC_ENV_OLS
         uint64_t dumr, dumc;
         float *norm_val;
         diskann::load_bin<float>(files, norm_val, dumr, dumc);
 #else
-    if (file_exists(norm_file) && metric == diskann::Metric::INNER_PRODUCT)
-    {
         uint64_t dumr, dumc;
         float *norm_val;
         diskann::load_bin<float>(norm_file, norm_val, dumr, dumc);
@@ -1253,6 +1335,14 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                                  uint64_t *indices, float *distances, const uint64_t beam_width,
                                                  const bool use_reorder_data, QueryStats *stats)
 {
+    // 1.
+    // 만약 해당 처럼 변수가 8개가 들어오면 이 함수를 실행하고,
+    // 3.의 format으로 io_limit = std::numeric_limits<uint32_t>::max() 으로 셋팅하고 실행
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    // diskann::cout << splitter << "[debug by hyuk] running cached_beam_search : 1" << splitter << "\n";
+#endif
     cached_beam_search(query1, k_search, l_search, indices, distances, beam_width, std::numeric_limits<uint32_t>::max(),
                        use_reorder_data, stats);
 }
@@ -1263,6 +1353,14 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                                  const bool use_filter, const LabelT &filter_label,
                                                  const bool use_reorder_data, QueryStats *stats)
 {
+    // 2.
+    // 만약 해당 처럼 변수가 10개가 들어오면 이 함수를 실행하고,
+    // 4.의 format으로 io_limit = std::numeric_limits<uint32_t>::max() 으로 셋팅하고 실행 => 변수 11개
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    // diskann::cout << splitter << "[debug by hyuk] running cached_beam_search : 2" << splitter << "\n";
+#endif
     cached_beam_search(query1, k_search, l_search, indices, distances, beam_width, use_filter, filter_label,
                        std::numeric_limits<uint32_t>::max(), use_reorder_data, stats);
 }
@@ -1273,6 +1371,14 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                                  const uint32_t io_limit, const bool use_reorder_data,
                                                  QueryStats *stats)
 {
+    // 3.
+    // 만약 해당 처럼 변수가 9개가 들어오면 이 함수를 실행하고,
+    // 4.의 format으로 use_filter = false, filter_label = dummy_filter (= 0) 으로 셋팅하고 실행 => 변수 10개
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    // diskann::cout << splitter << "[debug by hyuk] running cached_beam_search : 3" << splitter << "\n";
+#endif
     LabelT dummy_filter = 0;
     cached_beam_search(query1, k_search, l_search, indices, distances, beam_width, false, dummy_filter, io_limit,
                        use_reorder_data, stats);
@@ -1285,12 +1391,24 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                                                  const uint32_t io_limit, const bool use_reorder_data,
                                                  QueryStats *stats)
 {
-
+    // 4.
+    // 여기가 사실 main beam search
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    // diskann::cout << splitter << "[debug by hyuk] running main cached_beam_search" << splitter << "\n";
+#endif
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 1. check if beam_width is valid
+    ////////////////////////////////////////////////////////////////////////////////////
     uint64_t num_sector_per_nodes = DIV_ROUND_UP(_max_node_len, defaults::SECTOR_LEN);
     if (beam_width > num_sector_per_nodes * defaults::MAX_N_SECTOR_READS)
         throw ANNException("Beamwidth can not be higher than defaults::MAX_N_SECTOR_READS", -1, __FUNCSIG__, __FILE__,
                            __LINE__);
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 2. Scratch_space setup
+    ////////////////////////////////////////////////////////////////////////////////////
     ScratchStoreManager<SSDThreadData<T>> manager(this->_thread_data);
     auto data = manager.scratch_space();
     IOContext &ctx = data->ctx;
@@ -1300,6 +1418,10 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     // reset query scratch
     query_scratch->reset();
 
+    auto query_normalize_time_start = std::chrono::high_resolution_clock::now();
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 3. Query normalization
+    ////////////////////////////////////////////////////////////////////////////////////
     // copy query to thread specific aligned and allocated memory (for distance
     // calculations we need aligned data)
     float query_norm = 0;
@@ -1337,7 +1459,14 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         }
         pq_query_scratch->initialize(this->_data_dim, aligned_query_T);
     }
-
+    auto query_normalize_time_end = std::chrono::high_resolution_clock::now();
+    stats->normalize_time +=
+        std::chrono::duration_cast<std::chrono::nanoseconds>(query_normalize_time_end - query_normalize_time_start)
+            .count();
+    stats->normalize_count += 1;
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 4. Prefetch Data Buffer
+    ////////////////////////////////////////////////////////////////////////////////////
     // pointers to buffers for data
     T *data_buf = query_scratch->coord_scratch;
     _mm_prefetch((char *)data_buf, _MM_HINT_T1);
@@ -1348,11 +1477,20 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     const uint64_t num_sectors_per_node =
         _nnodes_per_sector > 0 ? 1 : DIV_ROUND_UP(_max_node_len, defaults::SECTOR_LEN);
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 5. PQ table and make Distance Calculation function
+    ////////////////////////////////////////////////////////////////////////////////////
     // query <-> PQ chunk centers distances
+    auto pq_preprocess_time_start = std::chrono::high_resolution_clock::now();
     _pq_table.preprocess_query(query_rotated); // center the query and rotate if
                                                // we have a rotation matrix
     float *pq_dists = pq_query_scratch->aligned_pqtable_dist_scratch;
     _pq_table.populate_chunk_distances(query_rotated, pq_dists);
+
+    auto pq_preprocess_time_end = std::chrono::high_resolution_clock::now();
+    stats->pq_preprocess_time +=
+        std::chrono::duration_cast<std::chrono::nanoseconds>(pq_preprocess_time_end - pq_preprocess_time_start).count();
+    stats->pq_preprocess_count += 1;
 
     // query <-> neighbor list
     float *dist_scratch = pq_query_scratch->aligned_dist_scratch;
@@ -1364,6 +1502,10 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         diskann::aggregate_coords(ids, n_ids, this->data, this->_n_chunks, pq_coord_scratch);
         diskann::pq_dist_lookup(pq_coord_scratch, n_ids, this->_n_chunks, pq_dists, dists_out);
     };
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 6. Timer and State Initialization
+    ////////////////////////////////////////////////////////////////////////////////////
     Timer query_timer, io_timer, cpu_timer;
 
     tsl::robin_set<uint64_t> &visited = query_scratch->visited;
@@ -1371,7 +1513,11 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     retset.reserve(l_search);
     std::vector<Neighbor> &full_retset = query_scratch->full_retset;
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 7. Medoid Selection
+    ////////////////////////////////////////////////////////////////////////////////////
     uint32_t best_medoid = 0;
+    auto medoid_selection_time_start = std::chrono::high_resolution_clock::now();
     float best_dist = (std::numeric_limits<float>::max)();
     if (!use_filter)
     {
@@ -1410,6 +1556,15 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         }
     }
 
+    auto medoid_selection_time_end = std::chrono::high_resolution_clock::now();
+    stats->medoid_selection_time =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(medoid_selection_time_end - medoid_selection_time_start)
+            .count();
+    stats->medoid_selection_count += 1;
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 8. Initial Step for Beam Search
+    ////////////////////////////////////////////////////////////////////////////////////
     compute_dists(&best_medoid, 1, dist_scratch);
     retset.insert(Neighbor(best_medoid, dist_scratch[0]));
     visited.insert(best_medoid);
@@ -1418,6 +1573,13 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     uint32_t hops = 0;
     uint32_t num_ios = 0;
 
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 9. Search Loop
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 9.1 변수 초기화
+    ////////////////////////////////////////////////////////////////////////////////////
     // cleared every iteration
     std::vector<uint32_t> frontier;
     frontier.reserve(2 * beam_width);
@@ -1428,6 +1590,10 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     std::vector<std::pair<uint32_t, std::pair<uint32_t, uint32_t *>>> cached_nhoods;
     cached_nhoods.reserve(2 * beam_width);
 
+    auto search_time_start = std::chrono::high_resolution_clock::now();
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 9.2 reset에 더이상 의미 있는 node가 없을 때까지 반복 && io_limit을 넘지 않을 때까지 반복
+    ////////////////////////////////////////////////////////////////////////////////////
     while (retset.has_unexpanded_node() && num_ios < io_limit)
     {
         // clear iteration state
@@ -1436,8 +1602,12 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         frontier_read_reqs.clear();
         cached_nhoods.clear();
         sector_scratch_idx = 0;
+        ////////////////////////////////////////////////////////////////////////////////
+        // 9.2.1 find New beam using retset
+        ////////////////////////////////////////////////////////////////////////////////
         // find new beam
         uint32_t num_seen = 0;
+        auto time_beam_start = std::chrono::high_resolution_clock::now();
         while (retset.has_unexpanded_node() && frontier.size() < beam_width && num_seen < beam_width)
         {
             auto nbr = retset.closest_unexpanded();
@@ -1445,6 +1615,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             auto iter = _nhood_cache.find(nbr.id);
             if (iter != _nhood_cache.end())
             {
+                // nbr이 _nhood_cache에 있으면 cached_nhoods에 넣어준다.
                 cached_nhoods.push_back(std::make_pair(nbr.id, iter->second));
                 if (stats != nullptr)
                 {
@@ -1453,6 +1624,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             }
             else
             {
+                // nbr이 _nhood_cache에 없으면 frontier에 넣어준다.
                 frontier.push_back(nbr.id);
             }
             if (this->_count_visited_nodes)
@@ -1460,8 +1632,15 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                 reinterpret_cast<std::atomic<uint32_t> &>(this->_node_visit_counter[nbr.id].second).fetch_add(1);
             }
         }
-
+        auto time_beam_end = std::chrono::high_resolution_clock::now();
+        stats->beam_search_time +=
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_beam_end - time_beam_start).count();
+        stats->beam_search_count += 1;
+        ////////////////////////////////////////////////////////////////////////////////
+        // 9.2.2 read neighborhood of all nodes in frontier
+        ////////////////////////////////////////////////////////////////////////////////
         // read nhoods of frontier ids
+        auto time_load_start = std::chrono::high_resolution_clock::now();
         if (!frontier.empty())
         {
             if (stats != nullptr)
@@ -1490,13 +1669,24 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 #else
             reader->read(frontier_read_reqs, ctx); // synchronous IO linux
 #endif
+            stats->frontier_load_count += 1;
             if (stats != nullptr)
             {
                 stats->io_us += (float)io_timer.elapsed();
             }
         }
 
+        auto time_load_end = std::chrono::high_resolution_clock::now();
+        stats->frontier_load_time +=
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_load_end - time_load_start).count();
+        ////////////////////////////////////////////////////////////////////////////////
+        // 9.2.3 process cached nhoods
+        // - cached_nhoods ard created by 9.2.1 find New beam using retset
+        // - cached_nhood안에 있는 node 들에 대해서, query 까지의 거리를 계산한
+        // - cached_nhood와 인접한 node들에 대해서, query 까지의 거리를 계산한 후, retset에 넣어준다.
+        ////////////////////////////////////////////////////////////////////////////////
         // process cached nhoods
+        auto time_cached_start = std::chrono::high_resolution_clock::now();
         for (auto &cached_nhood : cached_nhoods)
         {
             auto global_cache_iter = _coord_cache.find(cached_nhood.first);
@@ -1529,6 +1719,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
             }
 
             // process prefetched nhood
+            auto cache_time_data_process_start = std::chrono::high_resolution_clock::now();
             for (uint64_t m = 0; m < nnbrs; ++m)
             {
                 uint32_t id = node_nbrs[m];
@@ -1544,9 +1735,21 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                     float dist = dist_scratch[m];
                     Neighbor nn(id, dist);
                     retset.insert(nn);
+                    stats->cache_insert_count += 1;
                 }
             }
+            auto cache_time_data_process_end = std::chrono::high_resolution_clock::now();
+            stats->cache_insert_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                            cache_time_data_process_end - cache_time_data_process_start)
+                                            .count();
+            stats->cache_search_count += 1;
+            stats->cache_nnbrs += nnbrs;
         }
+        auto time_cached_end = std::chrono::high_resolution_clock::now();
+        stats->cache_search_time +=
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_cached_end - time_cached_start).count();
+
+        auto time_frontier_search_start = std::chrono::high_resolution_clock::now();
 #ifdef USE_BING_INFRA
         // process each frontier nhood - compute distances to unvisited nodes
         int completedIndex = -1;
@@ -1554,19 +1757,33 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
         // If we issued read requests and if a read is complete or there are
         // reads in wait state, then enter the while loop.
         while (requestCount > 0 && getNextCompletedRequest(reader, ctx, requestCount, completedIndex))
+#else
+        ////////////////////////////////////////////////////////////////////////////////
+        // 9.2.4 process each frontier nhood - compute distances to unvisited nodes
+        // - frontier_nhoods ard created by 9.2.2 read neighborhood of all nodes in frontier
+        // - frontier_nhood 에 대해서, query 까지의 거리를 계산한
+        ////////////////////////////////////////////////////////////////////////////////
+        for (auto &frontier_nhood : frontier_nhoods)
+#endif
         {
+#ifdef USE_BING_INFRA
             assert(completedIndex >= 0);
             auto &frontier_nhood = frontier_nhoods[completedIndex];
             (*ctx.m_pRequestsStatus)[completedIndex] = IOContext::PROCESS_COMPLETE;
-#else
-        for (auto &frontier_nhood : frontier_nhoods)
-        {
 #endif
+            auto time_data_process_start = std::chrono::high_resolution_clock::now();
             char *node_disk_buf = offset_to_node(frontier_nhood.second, frontier_nhood.first);
             uint32_t *node_buf = offset_to_node_nhood(node_disk_buf);
             uint64_t nnbrs = (uint64_t)(*node_buf);
             T *node_fp_coords = offset_to_node_coords(node_disk_buf);
             memcpy(data_buf, node_fp_coords, _disk_bytes_per_point);
+
+            auto time_data_process_end = std::chrono::high_resolution_clock::now();
+            stats->frontier_data_process_time +=
+                std::chrono::duration_cast<std::chrono::nanoseconds>(time_data_process_end - time_data_process_start)
+                    .count();
+            stats->frontier_data_process_count += 1;
+
             float cur_expanded_dist;
             if (!_use_disk_index_pq)
             {
@@ -1592,6 +1809,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 
             cpu_timer.reset();
             // process prefetch-ed nhood
+            auto frontier_time_data_process_start = std::chrono::high_resolution_clock::now();
             for (uint64_t m = 0; m < nnbrs; ++m)
             {
                 uint32_t id = node_nbrs[m];
@@ -1612,17 +1830,32 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
 
                     Neighbor nn(id, dist);
                     retset.insert(nn);
+                    stats->frontier_insert_count += 1;
                 }
             }
+            auto frontier_time_data_process_end = std::chrono::high_resolution_clock::now();
+            stats->frontier_insert_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                               frontier_time_data_process_end - frontier_time_data_process_start)
+                                               .count();
 
             if (stats != nullptr)
             {
                 stats->cpu_us += (float)cpu_timer.elapsed();
             }
+            stats->frontier_search_count += 1;
+            stats->frontier_nnbrs += nnbrs;
         }
+        auto time_frontier_search_end = std::chrono::high_resolution_clock::now();
+        stats->frontier_search_time +=
+            std::chrono::duration_cast<std::chrono::nanoseconds>(time_frontier_search_end - time_frontier_search_start)
+                .count();
 
         hops++;
     }
+    auto search_time_end = std::chrono::high_resolution_clock::now();
+    stats->search_time +=
+        std::chrono::duration_cast<std::chrono::nanoseconds>(search_time_end - search_time_start).count();
+    stats->search_count += 1;
 
     // re-sort by distance
     std::sort(full_retset.begin(), full_retset.end());

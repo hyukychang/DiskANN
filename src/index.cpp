@@ -426,8 +426,8 @@ size_t Index<T, TagT, LabelT>::load_tags(const std::string tag_filename)
     if (file_dim != 1)
     {
         std::stringstream stream;
-        stream << "ERROR: Found " << file_dim << " dimensions for tags,"
-               << "but tag file must have 1 dimension." << std::endl;
+        stream << "ERROR: Found " << file_dim << " dimensions for tags," << "but tag file must have 1 dimension."
+               << std::endl;
         diskann::cerr << stream.str() << std::endl;
         delete[] tag_data;
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
@@ -478,8 +478,8 @@ size_t Index<T, TagT, LabelT>::load_data(std::string filename)
     if (file_dim != _dim)
     {
         std::stringstream stream;
-        stream << "ERROR: Driver requests loading " << _dim << " dimension,"
-               << "but file has " << file_dim << " dimension." << std::endl;
+        stream << "ERROR: Driver requests loading " << _dim << " dimension," << "but file has " << file_dim
+               << " dimension." << std::endl;
         diskann::cerr << stream.str() << std::endl;
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
     }
@@ -535,6 +535,7 @@ void Index<T, TagT, LabelT>::load(AlignedFileReader &reader, uint32_t num_thread
 void Index<T, TagT, LabelT>::load(const char *filename, uint32_t num_threads, uint32_t search_l)
 {
 #endif
+
     std::unique_lock<std::shared_timed_mutex> ul(_update_lock);
     std::unique_lock<std::shared_timed_mutex> cl(_consolidate_lock);
     std::unique_lock<std::shared_timed_mutex> tl(_tag_lock);
@@ -1516,8 +1517,8 @@ void Index<T, TagT, LabelT>::build_with_data_populated(const std::vector<TagT> &
     if (_enable_tags && tags.size() != _nd)
     {
         std::stringstream stream;
-        stream << "ERROR: Driver requests loading " << _nd << " points from file,"
-               << "but tags vector is of size " << tags.size() << "." << std::endl;
+        stream << "ERROR: Driver requests loading " << _nd << " points from file," << "but tags vector is of size "
+               << tags.size() << "." << std::endl;
         diskann::cerr << stream.str() << std::endl;
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
     }
@@ -1630,8 +1631,8 @@ void Index<T, TagT, LabelT>::build(const char *filename, const size_t num_points
     {
         std::stringstream stream;
         stream << "ERROR: Driver requests loading " << num_points_to_load << " points and file has " << file_num_points
-               << " points, but "
-               << "index can support only " << _max_points << " points as specified in constructor." << std::endl;
+               << " points, but " << "index can support only " << _max_points << " points as specified in constructor."
+               << std::endl;
 
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
     }
@@ -1648,8 +1649,8 @@ void Index<T, TagT, LabelT>::build(const char *filename, const size_t num_points
     if (file_dim != _dim)
     {
         std::stringstream stream;
-        stream << "ERROR: Driver requests loading " << _dim << " dimension,"
-               << "but file has " << file_dim << " dimension." << std::endl;
+        stream << "ERROR: Driver requests loading " << _dim << " dimension," << "but file has " << file_dim
+               << " dimension." << std::endl;
         diskann::cerr << stream.str() << std::endl;
 
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
@@ -1970,8 +1971,8 @@ std::pair<uint32_t, uint32_t> Index<T, TagT, LabelT>::search(const T *query, con
 
     if (L > scratch->get_L())
     {
-        diskann::cout << "Attempting to expand query scratch_space. Was created "
-                      << "with Lsize: " << scratch->get_L() << " but search L is: " << L << std::endl;
+        diskann::cout << "Attempting to expand query scratch_space. Was created " << "with Lsize: " << scratch->get_L()
+                      << " but search L is: " << L << std::endl;
         scratch->resize_for_new_L(L);
         diskann::cout << "Resize completed. New scratch->L is " << scratch->get_L() << std::endl;
     }
@@ -2057,8 +2058,8 @@ std::pair<uint32_t, uint32_t> Index<T, TagT, LabelT>::search_with_filters(const 
 
     if (L > scratch->get_L())
     {
-        diskann::cout << "Attempting to expand query scratch_space. Was created "
-                      << "with Lsize: " << scratch->get_L() << " but search L is: " << L << std::endl;
+        diskann::cout << "Attempting to expand query scratch_space. Was created " << "with Lsize: " << scratch->get_L()
+                      << " but search L is: " << L << std::endl;
         scratch->resize_for_new_L(L);
         diskann::cout << "Resize completed. New scratch->L is " << scratch->get_L() << std::endl;
     }
@@ -2155,8 +2156,8 @@ size_t Index<T, TagT, LabelT>::search_with_tags(const T *query, const uint64_t K
 
     if (L > scratch->get_L())
     {
-        diskann::cout << "Attempting to expand query scratch_space. Was created "
-                      << "with Lsize: " << scratch->get_L() << " but search L is: " << L << std::endl;
+        diskann::cout << "Attempting to expand query scratch_space. Was created " << "with Lsize: " << scratch->get_L()
+                      << " but search L is: " << L << std::endl;
         scratch->resize_for_new_L(L);
         diskann::cout << "Resize completed. New scratch->L is " << scratch->get_L() << std::endl;
     }

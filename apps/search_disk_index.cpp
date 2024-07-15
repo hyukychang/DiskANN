@@ -28,6 +28,7 @@
 #endif
 
 #define WARMUP false
+#define HYUK_DEBUG false
 
 namespace po = boost::program_options;
 
@@ -55,6 +56,22 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                       const std::vector<uint32_t> &Lvec, const float fail_if_recall_below,
                       const std::vector<std::string> &query_filters, const bool use_reorder_data = false)
 {
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    diskann::cout << splitter << "[debug by hyuk] Running \"apps>search_disk_index.cpp>search_disk_index\"" << "\n"
+                  << "Params \n"
+                  << "metric : " << metric << "\n"
+                  << "index_path_prefix : " << index_path_prefix << "\n"
+                  << "result_output_prefix : " << result_output_prefix << "\n"
+                  << "query_file : " << query_file << "\n"
+                  << "gt_file : " << gt_file << "\n"
+                  << "num_threads : " << num_threads << "\n"
+                  << "recall_at : " << recall_at << "\n"
+                  << "beamwidth : " << beamwidth << "\n"
+                  << "num_nodes_to_cache : " << num_nodes_to_cache << "\n"
+                  << "search_io_limit : " << search_io_limit << "\n";
+#endif
     diskann::cout << "Search parameters: #threads: " << num_threads << ", ";
     if (beamwidth <= 0)
         diskann::cout << "beamwidth to be optimized for each L value" << std::flush;
@@ -90,6 +107,9 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     bool calc_recall_flag = false;
     if (gt_file != std::string("null") && gt_file != std::string("NULL") && file_exists(gt_file))
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter << "[debug by hyuk] going to run load_truthset\"" << splitter << "\n\n";
+#endif
         diskann::load_truthset(gt_file, gt_ids, gt_dists, gt_num, gt_dim);
         if (gt_num != query_num)
         {
@@ -108,16 +128,28 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
 #else
     reader.reset(new LinuxAlignedFileReader());
 #endif
-
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] make Flash Index" << splitter << "\n\n";
+#endif
     std::unique_ptr<diskann::PQFlashIndex<T, LabelT>> _pFlashIndex(
         new diskann::PQFlashIndex<T, LabelT>(reader, metric));
 
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] load Flash Index with params num_thread : " << num_threads
+                  << " path_prefix : " << index_path_prefix.c_str() << splitter << "\n\n";
+#endif
     int res = _pFlashIndex->load(num_threads, index_path_prefix.c_str());
 
     if (res != 0)
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter << "[debug by hyuk] res is not zero" << splitter << "\n\n";
+#endif
         return res;
     }
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] res is zero" << splitter << "\n\n";
+#endif
 
     std::vector<uint32_t> node_list;
     diskann::cout << "Caching " << num_nodes_to_cache << " nodes around medoid(s)" << std::endl;
@@ -126,6 +158,11 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     //     _pFlashIndex->generate_cache_list_from_sample_queries(warmup_query_file, 15, 6, num_nodes_to_cache,
     //     num_threads, node_list);
     _pFlashIndex->load_cache_list(node_list);
+
+#if HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] cache load finish" << splitter << "\n\n";
+#endif
+
     node_list.clear();
     node_list.shrink_to_fit();
 
@@ -180,6 +217,27 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     diskann::cout << std::setw(6) << "L" << std::setw(12) << "Beamwidth" << std::setw(16) << "QPS" << std::setw(16)
                   << "Mean Latency" << std::setw(16) << "99.9 Latency" << std::setw(16) << "Mean IOs" << std::setw(16)
                   << "CPU (s)";
+    // diskann::cout << std::setw(16) << "Mean Normalize Count" << std::setw(16) << "Mean Normalize Time" <<
+    // std::setw(16)
+    //               << "Mean PQ Preprocess Count" << std::setw(16) << "Mean PQ Preprocess Time" << std::setw(16)
+    //               << "Mean Medoid Selection Count" << std::setw(16) << "Mean Medoid Selection Time" << std::setw(16)
+    //               << "Mean Search Count" << std::setw(16) << "Mean Search Time" << std::setw(16)
+    //               << "Mean Beam Search Count" << std::setw(16) << "Mean Beam Search Time" << std::setw(16)
+    //               << "Mean Frontier Load Count" << std::setw(16) << "Mean Frontier Load Time" << std::setw(16)
+    //               << "Mean Cache Search Count" << std::setw(16) << "Mean Cache Search Time" << std::setw(16)
+    //               << "Mean Frontier Search Count" << std::setw(16) << "Mean Frontier Search Time";
+    // diskann::cout << std::setw(26) << "avg_normalize_t" << std::setw(26) << "avg_pq_preprocess_t" << std::setw(26)
+    //               << "avg_medoid_select_t";
+    diskann::cout << std::setw(26) << "avg_search_t" << std::setw(26) << "avg_beam_search_t" << std::setw(26)
+                  << "avg_beam_search_num" << std::setw(26) << "avg_frontier_load_t" << std::setw(26)
+                  << "avg_frontier_load_num" << std::setw(26) << "avg_cache_search_t" << std::setw(26)
+                  << "avg_cache_search_num" << std::setw(26) << "avg_frontier_search_t" << std::setw(26)
+                  << "avg_frontier_search_num" << std::setw(26) << "avg_data_process_t" << std::setw(26)
+                  << "avg_data_process_num";
+
+    diskann::cout << std::setw(26) << "avg_cache_insert_t" << std::setw(26) << "avg_frontier_insert_t";
+    // diskann::cout << std::setw(16) << "cache_nnbrs" << std::setw(16) << "frontier_nnbrs";
+    diskann::cout << std::setw(16) << "cache_insert_count" << std::setw(16) << "frontier_insert_count";
     if (calc_recall_flag)
     {
         diskann::cout << std::setw(16) << recall_string << std::endl;
@@ -187,6 +245,12 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     else
         diskann::cout << std::endl;
     diskann::cout << "==============================================================="
+                     "======================================================="
+                     "======================================================="
+                     "======================================================="
+                     "======================================================="
+                     "======================================================="
+                     "======================================================="
                      "======================================================="
                   << std::endl;
 
@@ -219,6 +283,11 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         query_result_ids[test_id].resize(recall_at * query_num);
         query_result_dists[test_id].resize(recall_at * query_num);
 
+#if HYUK_DEBUG
+        diskann::cout << splitter << "[debug by hyuk] looking for search with test_id : " << test_id << "\n"
+                      << "query_result_ids[test_id].size() : " << query_result_ids[test_id].size() << "\n"
+                      << "query_number : " << query_num << splitter << "\n";
+#endif
         auto stats = new diskann::QueryStats[query_num];
 
         std::vector<uint64_t> query_result_ids_64(recall_at * query_num);
@@ -251,6 +320,8 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
                     use_reorder_data, stats + i);
             }
         }
+
+        // return some stats for the queries
         auto e = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> diff = e - s;
         double qps = (1.0 * query_num) / (1.0 * diff.count());
@@ -270,6 +341,82 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         auto mean_cpuus = diskann::get_mean_stats<float>(stats, query_num,
                                                          [](const diskann::QueryStats &stats) { return stats.cpu_us; });
 
+        // This is custom stats
+        auto mean_normalize_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.normalize_count; });
+        auto mean_normalize_time = diskann::get_mean_stats<float>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.normalize_time; });
+        auto mean_pq_preprocess_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.pq_preprocess_count; });
+        auto mean_pq_preprocess_time = diskann::get_mean_stats<float>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.pq_preprocess_time; });
+        auto mean_medoid_selection_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.medoid_selection_count; });
+        // 사실상 count= 1일거라서 그냥 return 해도 상관은 없지만, 혹시 모르니까 count로 나눠야 할 수 도 있음
+        auto mean_medoid_selection_time = diskann::get_mean_stats<float>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.medoid_selection_time; });
+
+        auto mean_search_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.search_count; });
+        auto mean_search_time = diskann::get_mean_stats<float>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.search_time; });
+        auto mean_beam_search_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.beam_search_count; });
+        auto mean_beam_search_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.beam_search_time / stats.beam_search_count;
+            });
+        auto mean_frontier_load_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.frontier_load_count; });
+        auto mean_frontier_load_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.frontier_load_time / stats.frontier_load_count;
+            });
+        auto mean_cache_search_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.cache_search_count; });
+        auto mean_cache_search_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.cache_search_time / stats.cache_search_count;
+            });
+        auto mean_frontier_search_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.frontier_search_count; });
+        auto mean_frontier_search_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.frontier_search_time / stats.frontier_search_count;
+            });
+        auto mean_data_process_count = diskann::get_mean_stats<uint32_t>(
+            stats, query_num, [](const diskann::QueryStats &stats) { return stats.frontier_data_process_count; });
+        auto mean_data_process_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.frontier_data_process_time / stats.frontier_data_process_count;
+            });
+
+        auto mean_cache_insert_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.cache_insert_time / stats.cache_search_count;
+            });
+        auto mean_frontier_insert_time =
+            diskann::get_mean_stats<float>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.frontier_insert_time / stats.frontier_search_count;
+            });
+
+        auto mean_cache_nnbrs =
+            diskann::get_mean_stats<uint32_t>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.cache_nnbrs / stats.cache_search_count;
+            });
+        auto mean_frontier_nnbrs =
+            diskann::get_mean_stats<uint32_t>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.frontier_nnbrs / stats.frontier_search_count;
+            });
+        auto mean_cache_insert_count =
+            diskann::get_mean_stats<uint32_t>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.cache_insert_count / stats.cache_search_count;
+            });
+        auto mean_frontier_insert_count =
+            diskann::get_mean_stats<uint32_t>(stats, query_num, [](const diskann::QueryStats &stats) {
+                return stats.frontier_insert_count / stats.frontier_search_count;
+            });
+
         double recall = 0;
         if (calc_recall_flag)
         {
@@ -281,6 +428,29 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
         diskann::cout << std::setw(6) << L << std::setw(12) << optimized_beamwidth << std::setw(16) << qps
                       << std::setw(16) << mean_latency << std::setw(16) << latency_999 << std::setw(16) << mean_ios
                       << std::setw(16) << mean_cpuus;
+
+        // diskann::cout << std::setw(16) << mean_normalize_count << std::setw(16) << mean_normalize_time <<
+        // std::setw(16)
+        //               << mean_pq_preprocess_count << std::setw(16) << mean_pq_preprocess_time << std::setw(16)
+        //               << mean_medoid_selection_count << std::setw(16) << mean_medoid_selection_time << std::setw(16)
+        //               << mean_search_count << std::setw(16) << mean_search_time << std::setw(16)
+        //               << mean_beam_search_count << std::setw(16) << mean_beam_search_time << std::setw(16)
+        //               << mean_frontier_load_count << std::setw(16) << mean_frontier_load_time << std::setw(16)
+        //               << mean_cache_search_count << std::setw(16) << mean_cache_search_time << std::setw(16)
+        //               << mean_frontier_search_count << std::setw(16) << mean_frontier_search_time;
+        // diskann::cout << std::setw(26) << mean_normalize_time << std::setw(26) << mean_pq_preprocess_time
+        //               << std::setw(26) << mean_medoid_selection_time;
+
+        diskann::cout << std::setw(26) << mean_search_time << std::setw(26) << mean_beam_search_time << std::setw(26)
+                      << mean_beam_search_count << std::setw(26) << mean_frontier_load_time << std::setw(26)
+                      << mean_frontier_load_count << std::setw(26) << mean_cache_search_time << std::setw(26)
+                      << mean_cache_search_count << std::setw(26) << mean_frontier_search_time << std::setw(26)
+                      << mean_frontier_search_count << std::setw(26) << mean_data_process_time << std::setw(26)
+                      << mean_data_process_count;
+        diskann::cout << std::setw(26) << mean_cache_insert_time << std::setw(26) << mean_frontier_insert_time;
+        // diskann::cout << std::setw(16) << mean_cache_nnbrs << std::setw(16) << mean_frontier_nnbrs;
+        diskann::cout << std::setw(16) << mean_cache_insert_count << std::setw(16) << mean_frontier_insert_count;
+
         if (calc_recall_flag)
         {
             diskann::cout << std::setw(16) << recall << std::endl;
