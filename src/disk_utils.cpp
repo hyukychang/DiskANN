@@ -1132,7 +1132,7 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     }
 
 #if HYUK_DEBUG
-    const std::string splitter = "\n############################################################################"
+    const std::string splitter = "############################################################################"
                                  "##############################################################################\n";
     diskann::cout << splitter << "[debug by hyuk] running build_disk_index()" << "\n\n";
 #endif
