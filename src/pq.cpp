@@ -1101,7 +1101,7 @@ void generate_quantized_data(const std::string &data_file_to_use, const std::str
 #if HYUK_DEBUG
     const std::string splitter = "############################################################################"
                                  "##############################################################################\n";
-    diskann::cout << splitter << "[debug by hyuk] running generate_quantized_data()" << splitter << std::endl;
+    diskann::cout << splitter << "[debug by hyuk] running generate_quantized_data()\n" << splitter << std::endl;
 #endif
     size_t train_size, train_dim;
     float *train_data;
