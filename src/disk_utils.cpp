@@ -19,6 +19,8 @@
 #include "timer.h"
 #include "tsl/robin_set.h"
 
+#define HYUK_DEBUG true
+
 namespace diskann
 {
 
@@ -1129,6 +1131,12 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
         return -1;
     }
 
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "##############################################################################\n";
+    diskann::cout << splitter << "[debug by hyuk] running build_disk_index()" << "\n\n";
+#endif
+
     if (!std::is_same<T, float>::value &&
         (compareMetric == diskann::Metric::INNER_PRODUCT || compareMetric == diskann::Metric::COSINE))
     {
@@ -1167,6 +1175,14 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     {
         build_pq_bytes = atoi(param_list[7].c_str());
     }
+
+#if HYUK_DEBUG
+    diskann::cout << "[debug by hyuk] disk_pq_dims: " << disk_pq_dims << "\n";
+    diskann::cout << "[debug by hyuk] use_disk_pq: " << use_disk_pq << "\n";
+    diskann::cout << "[debug by hyuk] reorder_data: " << reorder_data << "\n";
+    diskann::cout << "[debug by hyuk] build_pq_bytes: " << build_pq_bytes << "\n";
+    diskann::cout << splitter << std::endl;
+#endif
 
     std::string base_file(dataFilePath);
     std::string data_file_to_use = base_file;
@@ -1292,6 +1308,12 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
 
     if (use_disk_pq)
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] generate_disk_quantized_data" << "\n";
+        diskann::cout << splitter << std::endl;
+#endif
+
         generate_disk_quantized_data<T>(data_file_to_use, disk_pq_pivots_path, disk_pq_compressed_vectors_path,
                                         compareMetric, p_val, disk_pq_dims);
     }
@@ -1312,6 +1334,11 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     diskann::cout << "Compressing " << dim << "-dimensional data into " << num_pq_chunks << " bytes per vector."
                   << std::endl;
 
+#if HYUK_DEBUG
+    diskann::cout << splitter;
+    diskann::cout << "[debug by hyuk] generate_quantized_data" << "\n";
+    diskann::cout << splitter << std::endl;
+#endif
     generate_quantized_data<T>(data_file_to_use, pq_pivots_path, pq_compressed_vectors_path, compareMetric, p_val,
                                num_pq_chunks, use_opq, codebook_prefix);
     diskann::cout << timer.elapsed_seconds_for_step("generating quantized data") << std::endl;
@@ -1323,6 +1350,11 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
 #endif
     // Whether it is cosine or inner product, we still L2 metric due to the pre-processing.
     timer.reset();
+#if HYUK_DEBUG
+    diskann::cout << splitter;
+    diskann::cout << "[debug by hyuk] build_merged_vamana_index" << "\n";
+    diskann::cout << splitter << std::endl;
+#endif
     diskann::build_merged_vamana_index<T, LabelT>(data_file_to_use.c_str(), diskann::Metric::L2, L, R, p_val,
                                                   indexing_ram_budget, mem_index_path, medoids_path, centroids_path,
                                                   build_pq_bytes, use_opq, num_threads, use_filters, labels_file_to_use,
@@ -1332,10 +1364,20 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     timer.reset();
     if (!use_disk_pq)
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] create_disk_layout with type T" << "\n";
+        diskann::cout << splitter << std::endl;
+#endif
         diskann::create_disk_layout<T>(data_file_to_use.c_str(), mem_index_path, disk_index_path);
     }
     else
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] create_disk_layout with type uint8_t" << "\n";
+        diskann::cout << splitter << std::endl;
+#endif
         if (!reorder_data)
             diskann::create_disk_layout<uint8_t>(disk_pq_compressed_vectors_path, mem_index_path, disk_index_path);
         else
