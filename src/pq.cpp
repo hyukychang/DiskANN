@@ -12,6 +12,7 @@
 
 // block size for reading/processing large files and matrices in blocks
 #define BLOCK_SIZE 5000000
+#define HYUK_DEBUG true
 
 namespace diskann
 {
@@ -1097,10 +1098,21 @@ void generate_quantized_data(const std::string &data_file_to_use, const std::str
                              const double p_val, const size_t num_pq_chunks, const bool use_opq,
                              const std::string &codebook_prefix)
 {
+#if HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "##############################################################################\n";
+    diskann::cout << splitter << "[debug by hyuk] running generate_quantized_data()" << splitter << std::endl;
+#endif
     size_t train_size, train_dim;
     float *train_data;
     if (!file_exists(codebook_prefix))
     {
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] codebook_prefix doesn't exist" << "\n";
+        diskann::cout << "[debug by hyuk] gen_random_slice<T>" << "\n";
+        diskann::cout << splitter << std::endl;
+#endif
         // instantiates train_data with random sample updates train_size
         gen_random_slice<T>(data_file_to_use.c_str(), p_val, train_data, train_size, train_dim);
         diskann::cout << "Training data with " << train_size << " samples loaded." << std::endl;
@@ -1113,11 +1125,21 @@ void generate_quantized_data(const std::string &data_file_to_use, const std::str
 
         if (!use_opq)
         {
+#if HYUK_DEBUG
+            diskann::cout << splitter;
+            diskann::cout << "[debug by hyuk] generate_pq_pivots" << "\n";
+            diskann::cout << splitter << std::endl;
+#endif
             generate_pq_pivots(train_data, train_size, (uint32_t)train_dim, NUM_PQ_CENTROIDS, (uint32_t)num_pq_chunks,
                                NUM_KMEANS_REPS_PQ, pq_pivots_path, make_zero_mean);
         }
         else
         {
+#if HYUK_DEBUG
+            diskann::cout << splitter;
+            diskann::cout << "[debug by hyuk] generate_opq_pivots" << "\n";
+            diskann::cout << splitter << std::endl;
+#endif
             generate_opq_pivots(train_data, train_size, (uint32_t)train_dim, NUM_PQ_CENTROIDS, (uint32_t)num_pq_chunks,
                                 pq_pivots_path, make_zero_mean);
         }
@@ -1127,6 +1149,11 @@ void generate_quantized_data(const std::string &data_file_to_use, const std::str
     {
         diskann::cout << "Skip Training with predefined pivots in: " << pq_pivots_path << std::endl;
     }
+#if HYUK_DEBUG
+    diskann::cout << splitter;
+    diskann::cout << "[debug by hyuk] generate_pq_data_from_pivots<T>" << "\n";
+    diskann::cout << splitter << std::endl;
+#endif
     generate_pq_data_from_pivots<T>(data_file_to_use, NUM_PQ_CENTROIDS, (uint32_t)num_pq_chunks, pq_pivots_path,
                                     pq_compressed_vectors_path, use_opq);
 }
