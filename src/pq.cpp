@@ -851,6 +851,13 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
                                  const std::string &pq_pivots_path, const std::string &pq_compressed_vectors_path,
                                  bool use_opq)
 {
+#if HYUK_DEBUG
+    const std::string splitter = "############################################################################"
+                                 "##############################################################################\n";
+    diskann::cout << splitter;
+    diskann::cout << "[debug by hyuk] code in generate_pq_data_from_pivots" << "\n";
+    diskann::cout << splitter << std::endl;
+#endif
     size_t read_blk_size = 64 * 1024 * 1024;
     cached_ifstream base_reader(data_file, read_blk_size);
     uint32_t npts32;
@@ -867,6 +874,12 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
 
     std::string inflated_pq_file = pq_compressed_vectors_path + "_inflated.bin";
 
+#if HYUK_DEBUG
+    diskann::cout << splitter;
+    diskann::cout << "[debug by hyuk] Load PQ data!!!!" << "\n";
+    diskann::cout << splitter << std::endl;
+#endif
+
     if (!file_exists(pq_pivots_path))
     {
         std::cout << "ERROR: PQ k-means pivot file not found" << std::endl;
@@ -877,6 +890,12 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
         size_t nr, nc;
         std::unique_ptr<size_t[]> file_offset_data;
 
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] load with <size_t> : file_offset_data" << "\n";
+        diskann::cout << splitter << std::endl;
+#endif
+
         diskann::load_bin<size_t>(pq_pivots_path.c_str(), file_offset_data, nr, nc, 0);
 
         if (nr != 4)
@@ -886,6 +905,11 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
             throw diskann::ANNException("Error reading pq_pivots file at offsets data.", -1, __FUNCSIG__, __FILE__,
                                         __LINE__);
         }
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] load with <float> : full_pivot_data" << "\n";
+        diskann::cout << splitter << std::endl;
+#endif
 
         diskann::load_bin<float>(pq_pivots_path.c_str(), full_pivot_data, nr, nc, file_offset_data[0]);
 
@@ -898,6 +922,12 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
                                         __LINE__);
         }
 
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] load with <float> : centroid" << "\n";
+        diskann::cout << splitter << std::endl;
+#endif
+
         diskann::load_bin<float>(pq_pivots_path.c_str(), centroid, nr, nc, file_offset_data[1]);
 
         if ((nr != dim) || (nc != 1))
@@ -907,6 +937,12 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
             throw diskann::ANNException("Error reading pq_pivots file at centroid data.", -1, __FUNCSIG__, __FILE__,
                                         __LINE__);
         }
+
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] load with <uint32_t> : chunk_offsets" << "\n";
+        diskann::cout << splitter << std::endl;
+#endif
 
         diskann::load_bin<uint32_t>(pq_pivots_path.c_str(), chunk_offsets, nr, nc, file_offset_data[2]);
 
@@ -920,6 +956,11 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
 
         if (use_opq)
         {
+#if HYUK_DEBUG
+            diskann::cout << splitter;
+            diskann::cout << "[debug by hyuk] load with <float> : rotation matrix" << "\n";
+            diskann::cout << splitter << std::endl;
+#endif
             std::string rotmat_path = pq_pivots_path + "_rotation_matrix.bin";
             diskann::load_bin<float>(rotmat_path.c_str(), rotmat_tr, nr, nc);
             if (nr != (uint64_t)dim || nc != dim)
@@ -958,6 +999,12 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
     std::unique_ptr<float[]> block_data_tmp = std::make_unique<float[]>(block_size * dim);
 
     size_t num_blocks = DIV_ROUND_UP(num_points, block_size);
+
+#if HYUK_DEBUG
+    diskann::cout << splitter;
+    diskann::cout << "[debug by hyuk] process for " << num_blocks << " blocks" << "\n";
+    diskann::cout << splitter << std::endl;
+#endif
 
     for (size_t block = 0; block < num_blocks; block++)
     {
