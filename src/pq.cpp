@@ -38,11 +38,10 @@ FixedChunkPQTable::~FixedChunkPQTable()
 
 #ifdef EXEC_ENV_OLS
 void FixedChunkPQTable::load_pq_centroid_bin(MemoryMappedFiles &files, const char *pq_table_file, size_t num_chunks)
-{
 #else
 void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t num_chunks)
-{
 #endif
+{
 
     uint64_t nr, nc;
     std::string rotmat_file = std::string(pq_table_file) + "_rotation_matrix.bin";
@@ -138,11 +137,13 @@ void FixedChunkPQTable::load_pq_centroid_bin(const char *pq_table_file, size_t n
 
 #ifdef EXEC_ENV_OLS
     if (files.fileExists(rotmat_file))
-    {
-        diskann::load_bin<float>(files, rotmat_file, (float *&)rotmat_tr, nr, nc);
 #else
     if (file_exists(rotmat_file))
+#endif
     {
+#ifdef EXEC_ENV_OLS
+        diskann::load_bin<float>(files, rotmat_file, (float *&)rotmat_tr, nr, nc);
+#else
         diskann::load_bin<float>(rotmat_file, rotmat_tr, nr, nc);
 #endif
         if (nr != this->ndims || nc != this->ndims)
