@@ -26,6 +26,7 @@
 #define VECTOR_SECTOR_OFFSET(id) ((((uint64_t)(id)) % _nvecs_per_sector) * _data_dim * sizeof(float))
 
 #define HYUK_DEBUG true
+#include <map>
 
 namespace diskann
 {
@@ -1594,8 +1595,19 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     ////////////////////////////////////////////////////////////////////////////////////
     // 9.2 reset에 더이상 의미 있는 node가 없을 때까지 반복 && io_limit을 넘지 않을 때까지 반복
     ////////////////////////////////////////////////////////////////////////////////////
+    std::map<uint32_t, uint32_t> reset_size_counter;
     while (retset.has_unexpanded_node() && num_ios < io_limit)
     {
+        if (reset_size_counter.find(retset.size()) == reset_size_counter.end())
+        {
+            reset_size_counter[retset.size()] = 1;
+            std::cout << "\nreset.size()" << retset.size() << std::endl;
+        }
+        else
+        {
+            reset_size_counter[retset.size()] += 1;
+        }
+
         // clear iteration state
         frontier.clear();
         frontier_nhoods.clear();
@@ -1738,6 +1750,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                     stats->cache_insert_count += 1;
                 }
             }
+            diskann::cout << "\ninsert node : " << stats->cache_insert_count << "\n" << std::endl;
             auto cache_time_data_process_end = std::chrono::high_resolution_clock::now();
             stats->cache_insert_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
                                             cache_time_data_process_end - cache_time_data_process_start)
@@ -1833,6 +1846,7 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
                     stats->frontier_insert_count += 1;
                 }
             }
+            diskann::cout << "\ninsert node : " << stats->frontier_insert_count << "\n" << std::endl;
             auto frontier_time_data_process_end = std::chrono::high_resolution_clock::now();
             stats->frontier_insert_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
                                                frontier_time_data_process_end - frontier_time_data_process_start)
@@ -1856,6 +1870,14 @@ void PQFlashIndex<T, LabelT>::cached_beam_search(const T *query1, const uint64_t
     stats->search_time +=
         std::chrono::duration_cast<std::chrono::nanoseconds>(search_time_end - search_time_start).count();
     stats->search_count += 1;
+
+    diskann::cout << splitter;
+    diskann::cout << "reset_size_counter\n";
+    for (auto iter : reset_size_counter)
+    {
+        diskann::cout << iter.first << ":" << iter.second << "\n";
+    }
+    diskann::cout << splitter << std::endl;
 
     // re-sort by distance
     std::sort(full_retset.begin(), full_retset.end());
