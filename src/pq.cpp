@@ -982,7 +982,15 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
         diskann::cout << "[debug by hyuk] nc : " << nc << "\n";
         for (size_t i = 0; i < nr; i++)
         {
-            diskann::cout << "[debug by hyuk] centroid[" << i << "] : " << centroid[i] << "\n";
+            diskann::cout << "[debug by hyuk] centroid[ c_" << i << " ] : " << centroid[i] << "\n";
+            for (size_t j = 0; j < nc; j++)
+            {
+                diskann::cout << std::setw(10) << centroid[i * nc + j] << " ";
+                if (j % 16 == 15)
+                {
+                    diskann::cout << "\n";
+                }
+            }
         }
         diskann::cout << splitter << std::endl;
 #endif
