@@ -1302,6 +1302,9 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
 
     size_t points_num, dim;
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // 1. get binary metadata
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Timer timer;
     diskann::get_bin_metadata(data_file_to_use.c_str(), points_num, dim);
     const double p_val = ((double)MAX_PQ_TRAINING_SET_SIZE / (double)points_num);

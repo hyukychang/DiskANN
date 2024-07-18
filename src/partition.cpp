@@ -127,7 +127,9 @@ void gen_random_slice(const std::string data_file, double p_val, float *&sampled
     size_t x = rd();
     std::mt19937 generator((uint32_t)x);
     std::uniform_real_distribution<float> distribution(0, 1);
-
+#ifdef HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] processing with p_val : " << p_val << std::endl;
+#endif
     for (size_t i = 0; i < npts; i++)
     {
         base_reader.read((char *)cur_vector_T.get(), ndims * sizeof(T));

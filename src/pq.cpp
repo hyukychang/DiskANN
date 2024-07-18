@@ -545,7 +545,10 @@ int generate_pq_pivots(const float *const passed_train_data, size_t num_train, u
                         cur_chunk_size * sizeof(float));
         }
     }
-
+#if HYUK_DEBUG
+    std::string splitter = "\n========================================\n";
+    diskann::cout << splitter << "[debug by hyuk] going to save pq pivot data" << splitter << std::endl;
+#endif
     std::vector<size_t> cumul_bytes(4, 0);
     cumul_bytes[0] = METADATA_SIZE;
     cumul_bytes[1] = cumul_bytes[0] + diskann::save_bin<float>(pq_pivots_path.c_str(), full_pivot_data.get(),
@@ -908,6 +911,18 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
         }
 #if HYUK_DEBUG
         diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] file_offset_data" << "\n";
+        diskann::cout << "[debug by hyuk] nr : " << nr << "\n";
+        diskann::cout << "[debug by hyuk] nc : " << nc << "\n";
+        for (size_t i = 0; i < nr; i++)
+        {
+            diskann::cout << "[debug by hyuk] file_offset_data[" << i << "] : " << file_offset_data[i] << "\n";
+        }
+        diskann::cout << splitter << std::endl;
+#endif
+
+#if HYUK_DEBUG
+        diskann::cout << splitter;
         diskann::cout << "[debug by hyuk] load with <float> : full_pivot_data" << "\n";
         diskann::cout << splitter << std::endl;
 #endif
@@ -922,6 +937,18 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
             throw diskann::ANNException("Error reading pq_pivots file at pivots data.", -1, __FUNCSIG__, __FILE__,
                                         __LINE__);
         }
+
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] full_pivot_data" << "\n";
+        diskann::cout << "[debug by hyuk] nr : " << nr << "\n";
+        diskann::cout << "[debug by hyuk] nc : " << nc << "\n";
+        for (size_t i = 0; i < nr; i++)
+        {
+            diskann::cout << "[debug by hyuk] full_pivot_data[" << i << "] : " << full_pivot_data[i] << "\n";
+        }
+        diskann::cout << splitter << std::endl;
+#endif
 
 #if HYUK_DEBUG
         diskann::cout << splitter;
@@ -941,6 +968,18 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
 
 #if HYUK_DEBUG
         diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] centroid" << "\n";
+        diskann::cout << "[debug by hyuk] nr : " << nr << "\n";
+        diskann::cout << "[debug by hyuk] nc : " << nc << "\n";
+        for (size_t i = 0; i < nr; i++)
+        {
+            diskann::cout << "[debug by hyuk] centroid[" << i << "] : " << centroid[i] << "\n";
+        }
+        diskann::cout << splitter << std::endl;
+#endif
+
+#if HYUK_DEBUG
+        diskann::cout << splitter;
         diskann::cout << "[debug by hyuk] load with <uint32_t> : chunk_offsets" << "\n";
         diskann::cout << splitter << std::endl;
 #endif
@@ -954,6 +993,18 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
             throw diskann::ANNException("Error reading pq_pivots file at chunk offsets.", -1, __FUNCSIG__, __FILE__,
                                         __LINE__);
         }
+
+#if HYUK_DEBUG
+        diskann::cout << splitter;
+        diskann::cout << "[debug by hyuk] chunk_offsets" << "\n";
+        diskann::cout << "[debug by hyuk] nr : " << nr << "\n";
+        diskann::cout << "[debug by hyuk] nc : " << nc << "\n";
+        for (size_t i = 0; i < nr; i++)
+        {
+            diskann::cout << "[debug by hyuk] chunk_offsets[" << i << "] : " << chunk_offsets[i] << "\n";
+        }
+        diskann::cout << splitter << std::endl;
+#endif
 
         if (use_opq)
         {
