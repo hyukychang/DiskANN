@@ -13,6 +13,7 @@
 // block size for reading/processing large files and matrices in blocks
 #define BLOCK_SIZE 5000000
 #define HYUK_DEBUG true
+#define HYUK_LOG_DATA false
 
 namespace diskann
 {
@@ -909,7 +910,7 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
             throw diskann::ANNException("Error reading pq_pivots file at offsets data.", -1, __FUNCSIG__, __FILE__,
                                         __LINE__);
         }
-#if HYUK_DEBUG
+#if HYUK_LOG_DATA
         diskann::cout << splitter;
         diskann::cout << "[debug by hyuk] file_offset_data" << "\n";
         diskann::cout << "[debug by hyuk] nr : " << nr << "\n";
@@ -938,14 +939,22 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
                                         __LINE__);
         }
 
-#if HYUK_DEBUG
+#if HYUK_LOG_DATA
         diskann::cout << splitter;
         diskann::cout << "[debug by hyuk] full_pivot_data" << "\n";
         diskann::cout << "[debug by hyuk] nr : " << nr << "\n";
         diskann::cout << "[debug by hyuk] nc : " << nc << "\n";
         for (size_t i = 0; i < nr; i++)
         {
-            diskann::cout << "[debug by hyuk] full_pivot_data[" << i << "] : " << full_pivot_data[i] << "\n";
+            diskann::cout << "[debug by hyuk] full_pivot_data[ v_" << i << " ]" << "\n";
+            for (size_t j = 0; j < nc; j++)
+            {
+                diskann::cout << std::setw(10) << full_pivot_data[i * nc + j] << " ";
+                if (j % 16 == 15)
+                {
+                    diskann::cout << "\n";
+                }
+            }
         }
         diskann::cout << splitter << std::endl;
 #endif
@@ -966,7 +975,7 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
                                         __LINE__);
         }
 
-#if HYUK_DEBUG
+#if HYUK_LOG_DATA
         diskann::cout << splitter;
         diskann::cout << "[debug by hyuk] centroid" << "\n";
         diskann::cout << "[debug by hyuk] nr : " << nr << "\n";
@@ -994,7 +1003,7 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
                                         __LINE__);
         }
 
-#if HYUK_DEBUG
+#if HYUK_LOG_DATA
         diskann::cout << splitter;
         diskann::cout << "[debug by hyuk] chunk_offsets" << "\n";
         diskann::cout << "[debug by hyuk] nr : " << nr << "\n";
