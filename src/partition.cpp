@@ -27,6 +27,7 @@
 
 // block size for reading/ processing large files and matrices in blocks
 #define BLOCK_SIZE 5000000
+#define HYUK_DEBUG true
 
 // #define SAVE_INFLATED_PQ true
 
@@ -95,6 +96,11 @@ template <typename T>
 void gen_random_slice(const std::string data_file, double p_val, float *&sampled_data, size_t &slice_size,
                       size_t &ndims)
 {
+#ifdef HYUK_DEBUG
+    const std::string splitter = "\n############################################################################"
+                                 "####################################\n";
+    diskann::cout << splitter << "[debug by hyuk] gen_random_slice " << data_file << splitter << std::endl;
+#endif
     size_t npts;
     uint32_t npts32, ndims32;
     std::vector<std::vector<float>> sampled_vectors;
@@ -103,13 +109,17 @@ void gen_random_slice(const std::string data_file, double p_val, float *&sampled
     size_t read_blk_size = 64 * 1024 * 1024;
     // create cached reader + writer
     cached_ifstream base_reader(data_file.c_str(), read_blk_size);
-
+#ifdef HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] cached_ifstream created" << splitter << std::endl;
+#endif
     // metadata: npts, ndims
     base_reader.read((char *)&npts32, sizeof(uint32_t));
     base_reader.read((char *)&ndims32, sizeof(uint32_t));
     npts = npts32;
     ndims = ndims32;
-
+#ifdef HYUK_DEBUG
+    diskann::cout << splitter << "[debug by hyuk] read npts and ndims finish" << splitter << std::endl;
+#endif
     std::unique_ptr<T[]> cur_vector_T = std::make_unique<T[]>(ndims);
     p_val = p_val < 1 ? p_val : 1;
 
