@@ -545,11 +545,31 @@ int generate_pq_pivots(const float *const passed_train_data, size_t num_train, u
             std::memcpy(full_pivot_data.get() + j * dim + chunk_offsets[i], cur_pivot_data.get() + j * cur_chunk_size,
                         cur_chunk_size * sizeof(float));
         }
+#if HYUK_LOG_DATA
+        std::string splitter = "\n========================================\n";
+        diskann::cout << splitter << "[log by hyuk] Loading the closest data" << std::endl;
+        diskann::cout << "closest_center.size() = " << closest_center.size() << std::endl;
+        for (size_t i = 0; i < num_train; i++)
+        {
+            diskann::cout << "closest_center[" << i << "] = " << closest_center[i] << std::endl;
+        }
+        diskann::cout << splitter << std::endl;
+#endif
     }
 #if HYUK_DEBUG
     std::string splitter = "\n========================================\n";
     diskann::cout << splitter << "[debug by hyuk] going to save pq pivot data" << splitter << std::endl;
 #endif
+    // #if HYUK_LOG_DATA
+    //     std::string splitter = "\n========================================\n";
+    //     diskann::cout << splitter << "[log by hyuk] Loading the closest data" << std::endl;
+    //     diskann::cout << "closest_center.size() = " << closest_center.size() << std::endl;
+    //     for (size_t i = 0; i < num_train; i++)
+    //     {
+    //         diskann::cout << "closest_center[" << i << "] = " << closest_center[i] << std::endl;
+    //     }
+    //     diskann::cout << splitter << std::endl;
+    // #endif
     std::vector<size_t> cumul_bytes(4, 0);
     cumul_bytes[0] = METADATA_SIZE;
     cumul_bytes[1] = cumul_bytes[0] + diskann::save_bin<float>(pq_pivots_path.c_str(), full_pivot_data.get(),

@@ -120,19 +120,19 @@ Index<T, TagT, LabelT>::Index(Metric m, const size_t dim, const size_t max_point
                               const bool filtered_index)
     : Index(
           IndexConfigBuilder()
-              .with_metric(m)
-              .with_dimension(dim)
-              .with_max_points(max_points)
-              .with_index_write_params(index_parameters)
-              .with_index_search_params(index_search_params)
-              .with_num_frozen_pts(num_frozen_pts)
-              .is_dynamic_index(dynamic_index)
-              .is_enable_tags(enable_tags)
-              .is_concurrent_consolidate(concurrent_consolidate)
-              .is_pq_dist_build(pq_dist_build)
-              .with_num_pq_chunks(num_pq_chunks)
-              .is_use_opq(use_opq)
-              .is_filtered(filtered_index)
+              .with_metric(m)                                // compareMetric
+              .with_dimension(dim)                           // base_dim
+              .with_max_points(max_points)                   // base_num
+              .with_index_write_params(index_parameters)     // std::make_shared<diskann::IndexWriteParameters>(paras)
+              .with_index_search_params(index_search_params) // nullptr
+              .with_num_frozen_pts(num_frozen_pts)           // defaults::NUM_FROZEN_POINTS_STATIC
+              .is_dynamic_index(dynamic_index)               // false
+              .is_enable_tags(enable_tags)                   // false
+              .is_concurrent_consolidate(concurrent_consolidate) // false
+              .is_pq_dist_build(pq_dist_build)                   // build_pq_bytes > 0
+              .with_num_pq_chunks(num_pq_chunks)                 // build_pq_bytes
+              .is_use_opq(use_opq)                               // use_opq
+              .is_filtered(filtered_index)                       // use_filter
               .with_data_type(diskann_type_to_name<T>())
               .build(),
           IndexFactory::construct_datastore<T>(DataStoreStrategy::MEMORY,
@@ -426,8 +426,8 @@ size_t Index<T, TagT, LabelT>::load_tags(const std::string tag_filename)
     if (file_dim != 1)
     {
         std::stringstream stream;
-        stream << "ERROR: Found " << file_dim << " dimensions for tags,"
-               << "but tag file must have 1 dimension." << std::endl;
+        stream << "ERROR: Found " << file_dim << " dimensions for tags," << "but tag file must have 1 dimension."
+               << std::endl;
         diskann::cerr << stream.str() << std::endl;
         delete[] tag_data;
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
@@ -478,8 +478,8 @@ size_t Index<T, TagT, LabelT>::load_data(std::string filename)
     if (file_dim != _dim)
     {
         std::stringstream stream;
-        stream << "ERROR: Driver requests loading " << _dim << " dimension,"
-               << "but file has " << file_dim << " dimension." << std::endl;
+        stream << "ERROR: Driver requests loading " << _dim << " dimension," << "but file has " << file_dim
+               << " dimension." << std::endl;
         diskann::cerr << stream.str() << std::endl;
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
     }
@@ -1270,6 +1270,7 @@ void Index<T, TagT, LabelT>::inter_insert(uint32_t n, std::vector<uint32_t> &pru
 
 template <typename T, typename TagT, typename LabelT> void Index<T, TagT, LabelT>::link()
 {
+    diskann::cout << "Starting link.." << std::endl;
     uint32_t num_threads = _indexingThreads;
     if (num_threads != 0)
         omp_set_num_threads(num_threads);
@@ -1297,7 +1298,7 @@ template <typename T, typename TagT, typename LabelT> void Index<T, TagT, LabelT
         _start = calculate_entry_point();
 
     diskann::Timer link_timer;
-
+    diskann::Timer pruning_timer;
 #pragma omp parallel for schedule(dynamic, 2048)
     for (int64_t node_ctr = 0; node_ctr < (int64_t)(visit_order.size()); node_ctr++)
     {
@@ -1324,6 +1325,8 @@ template <typename T, typename TagT, typename LabelT> void Index<T, TagT, LabelT
             assert(_graph_store->get_neighbours((location_t)node).size() <= _indexingRange);
         }
 
+        diskann::cout << "call inter_insert for node " << node << " with pruned_list size " << pruned_list.size()
+                      << std::endl;
         inter_insert(node, pruned_list, scratch);
 
         if (node_ctr % 100000 == 0)
@@ -1332,7 +1335,7 @@ template <typename T, typename TagT, typename LabelT> void Index<T, TagT, LabelT
                           << std::flush;
         }
     }
-
+    diskann::cout << pruning_timer.elapsed_seconds_for_step("pruning data ") << std::endl;
     if (_nd > 0)
     {
         diskann::cout << "Starting final cleanup.." << std::flush;
@@ -1516,8 +1519,8 @@ void Index<T, TagT, LabelT>::build_with_data_populated(const std::vector<TagT> &
     if (_enable_tags && tags.size() != _nd)
     {
         std::stringstream stream;
-        stream << "ERROR: Driver requests loading " << _nd << " points from file,"
-               << "but tags vector is of size " << tags.size() << "." << std::endl;
+        stream << "ERROR: Driver requests loading " << _nd << " points from file," << "but tags vector is of size "
+               << tags.size() << "." << std::endl;
         diskann::cerr << stream.str() << std::endl;
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
     }
@@ -1578,6 +1581,7 @@ void Index<T, TagT, LabelT>::_build(const DataType &data, const size_t num_point
 template <typename T, typename TagT, typename LabelT>
 void Index<T, TagT, LabelT>::build(const T *data, const size_t num_points_to_load, const std::vector<TagT> &tags)
 {
+    diskann::cout << "use build 1" << std::endl;
     if (num_points_to_load == 0)
     {
         throw ANNException("Do not call build with 0 points", -1, __FUNCSIG__, __FILE__, __LINE__);
@@ -1603,6 +1607,7 @@ void Index<T, TagT, LabelT>::build(const T *data, const size_t num_points_to_loa
 template <typename T, typename TagT, typename LabelT>
 void Index<T, TagT, LabelT>::build(const char *filename, const size_t num_points_to_load, const std::vector<TagT> &tags)
 {
+    diskann::cout << "use build 2" << std::endl;
     // idealy this should call build_filtered_index based on params passed
 
     std::unique_lock<std::shared_timed_mutex> ul(_update_lock);
@@ -1630,8 +1635,8 @@ void Index<T, TagT, LabelT>::build(const char *filename, const size_t num_points
     {
         std::stringstream stream;
         stream << "ERROR: Driver requests loading " << num_points_to_load << " points and file has " << file_num_points
-               << " points, but "
-               << "index can support only " << _max_points << " points as specified in constructor." << std::endl;
+               << " points, but " << "index can support only " << _max_points << " points as specified in constructor."
+               << std::endl;
 
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
     }
@@ -1648,8 +1653,8 @@ void Index<T, TagT, LabelT>::build(const char *filename, const size_t num_points
     if (file_dim != _dim)
     {
         std::stringstream stream;
-        stream << "ERROR: Driver requests loading " << _dim << " dimension,"
-               << "but file has " << file_dim << " dimension." << std::endl;
+        stream << "ERROR: Driver requests loading " << _dim << " dimension," << "but file has " << file_dim
+               << " dimension." << std::endl;
         diskann::cerr << stream.str() << std::endl;
 
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
@@ -1689,6 +1694,7 @@ void Index<T, TagT, LabelT>::build(const char *filename, const size_t num_points
 template <typename T, typename TagT, typename LabelT>
 void Index<T, TagT, LabelT>::build(const char *filename, const size_t num_points_to_load, const char *tag_filename)
 {
+    diskann::cout << "use build 3" << std::endl;
     std::vector<TagT> tags;
 
     if (_enable_tags)
@@ -1733,6 +1739,7 @@ template <typename T, typename TagT, typename LabelT>
 void Index<T, TagT, LabelT>::build(const std::string &data_file, const size_t num_points_to_load,
                                    IndexFilterParams &filter_params)
 {
+    diskann::cout << "use build 4" << std::endl;
     size_t points_to_load = num_points_to_load == 0 ? _max_points : num_points_to_load;
 
     auto s = std::chrono::high_resolution_clock::now();
@@ -1970,8 +1977,8 @@ std::pair<uint32_t, uint32_t> Index<T, TagT, LabelT>::search(const T *query, con
 
     if (L > scratch->get_L())
     {
-        diskann::cout << "Attempting to expand query scratch_space. Was created "
-                      << "with Lsize: " << scratch->get_L() << " but search L is: " << L << std::endl;
+        diskann::cout << "Attempting to expand query scratch_space. Was created " << "with Lsize: " << scratch->get_L()
+                      << " but search L is: " << L << std::endl;
         scratch->resize_for_new_L(L);
         diskann::cout << "Resize completed. New scratch->L is " << scratch->get_L() << std::endl;
     }
@@ -2057,8 +2064,8 @@ std::pair<uint32_t, uint32_t> Index<T, TagT, LabelT>::search_with_filters(const 
 
     if (L > scratch->get_L())
     {
-        diskann::cout << "Attempting to expand query scratch_space. Was created "
-                      << "with Lsize: " << scratch->get_L() << " but search L is: " << L << std::endl;
+        diskann::cout << "Attempting to expand query scratch_space. Was created " << "with Lsize: " << scratch->get_L()
+                      << " but search L is: " << L << std::endl;
         scratch->resize_for_new_L(L);
         diskann::cout << "Resize completed. New scratch->L is " << scratch->get_L() << std::endl;
     }
@@ -2155,8 +2162,8 @@ size_t Index<T, TagT, LabelT>::search_with_tags(const T *query, const uint64_t K
 
     if (L > scratch->get_L())
     {
-        diskann::cout << "Attempting to expand query scratch_space. Was created "
-                      << "with Lsize: " << scratch->get_L() << " but search L is: " << L << std::endl;
+        diskann::cout << "Attempting to expand query scratch_space. Was created " << "with Lsize: " << scratch->get_L()
+                      << " but search L is: " << L << std::endl;
         scratch->resize_for_new_L(L);
         diskann::cout << "Resize completed. New scratch->L is " << scratch->get_L() << std::endl;
     }

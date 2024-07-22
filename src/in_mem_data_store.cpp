@@ -53,8 +53,8 @@ template <typename data_t> location_t InMemDataStore<data_t>::load_impl(AlignedF
     if (file_dim != this->_dim)
     {
         std::stringstream stream;
-        stream << "ERROR: Driver requests loading " << this->_dim << " dimension,"
-               << "but file has " << file_dim << " dimension." << std::endl;
+        stream << "ERROR: Driver requests loading " << this->_dim << " dimension," << "but file has " << file_dim
+               << " dimension." << std::endl;
         diskann::cerr << stream.str() << std::endl;
         aligned_free(_data);
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
@@ -86,8 +86,8 @@ template <typename data_t> location_t InMemDataStore<data_t>::load_impl(const st
     if (file_dim != this->_dim)
     {
         std::stringstream stream;
-        stream << "ERROR: Driver requests loading " << this->_dim << " dimension,"
-               << "but file has " << file_dim << " dimension." << std::endl;
+        stream << "ERROR: Driver requests loading " << this->_dim << " dimension," << "but file has " << file_dim
+               << " dimension." << std::endl;
         diskann::cerr << stream.str() << std::endl;
         aligned_free(_data);
         throw diskann::ANNException(stream.str(), -1, __FUNCSIG__, __FILE__, __LINE__);
@@ -127,6 +127,9 @@ template <typename data_t> void InMemDataStore<data_t>::populate_data(const std:
     size_t npts, ndim;
     copy_aligned_data_from_file(filename.c_str(), _data, npts, ndim, _aligned_dim, offset);
 
+    diskann::cerr << "Populated " << npts << " points from " << filename << " with _aligned_dim" << _aligned_dim
+                  << std::endl;
+
     if ((location_t)npts > this->capacity())
     {
         std::stringstream ss;
@@ -146,6 +149,7 @@ template <typename data_t> void InMemDataStore<data_t>::populate_data(const std:
 
     if (_distance_fn->preprocessing_required())
     {
+        diskann::cout << "Preprocessing base points" << std::endl;
         _distance_fn->preprocess_base_points(_data, this->_aligned_dim, this->capacity());
     }
 }

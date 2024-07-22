@@ -1342,6 +1342,9 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     diskann::cout << "[debug by hyuk] generate_quantized_data" << "\n";
     diskann::cout << splitter << std::endl;
 #endif
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // 2. generate_quantized_data
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     generate_quantized_data<T>(data_file_to_use, pq_pivots_path, pq_compressed_vectors_path, compareMetric, p_val,
                                num_pq_chunks, use_opq, codebook_prefix);
     diskann::cout << timer.elapsed_seconds_for_step("generating quantized data") << std::endl;
