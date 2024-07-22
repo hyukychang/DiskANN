@@ -1325,8 +1325,8 @@ template <typename T, typename TagT, typename LabelT> void Index<T, TagT, LabelT
             assert(_graph_store->get_neighbours((location_t)node).size() <= _indexingRange);
         }
 
-        diskann::cout << "call inter_insert for node " << node << " with pruned_list size " << pruned_list.size()
-                      << std::endl;
+        // diskann::cout << "call inter_insert for node " << node << " with pruned_list size " << pruned_list.size()
+        //               << std::endl;
         inter_insert(node, pruned_list, scratch);
 
         if (node_ctr % 100000 == 0)
