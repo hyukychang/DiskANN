@@ -536,7 +536,29 @@ int generate_pq_pivots(const float *const passed_train_data, size_t num_train, u
         }
 
         kmeans::kmeanspp_selecting_pivots(cur_data.get(), num_train, cur_chunk_size, cur_pivot_data.get(), num_centers);
-
+#if HYUK_LOG_DATA
+        ////////////////////////////////////////////////////////////////
+        // print cur_data and cur_pivot_data
+        for (size_t i = 0; i < num_train; i++)
+        {
+            diskann::cout << "cur_data[" << i << "] = ";
+            for (size_t j = 0; j < cur_chunk_size; j++)
+            {
+                diskann::cout << cur_data[i * cur_chunk_size + j] << " ";
+            }
+            diskann::cout << std::endl;
+        }
+        for (size_t i = 0; i < num_centers; i++)
+        {
+            diskann::cout << "cur_pivot_data[" << i << "] = ";
+            for (size_t j = 0; j < cur_chunk_size; j++)
+            {
+                diskann::cout << cur_pivot_data[i * cur_chunk_size + j] << " ";
+            }
+            diskann::cout << std::endl;
+        }
+        ////////////////////////////////////////////////////////////////
+#endif
         kmeans::run_lloyds(cur_data.get(), num_train, cur_chunk_size, cur_pivot_data.get(), num_centers,
                            max_k_means_reps, NULL, closest_center.get());
 
@@ -548,7 +570,7 @@ int generate_pq_pivots(const float *const passed_train_data, size_t num_train, u
 #if HYUK_LOG_DATA
         std::string splitter = "\n========================================\n";
         diskann::cout << splitter << "[log by hyuk] Loading the closest data" << std::endl;
-        diskann::cout << "closest_center.size() = " << closest_center.size() << std::endl;
+        // diskann::cout << "closest_center.size() = " << closest_center.size() << std::endl;
         for (size_t i = 0; i < num_train; i++)
         {
             diskann::cout << "closest_center[" << i << "] = " << closest_center[i] << std::endl;
@@ -1158,6 +1180,15 @@ int generate_pq_data_from_pivots(const std::string &data_file, uint32_t num_cent
 
             math_utils::compute_closest_centers(cur_data.get(), cur_blk_size, cur_chunk_size, cur_pivot_data.get(),
                                                 num_centers, 1, closest_center.get());
+
+#if HYUK_LOG_DATA
+            std::cout << "current_chunk = " << i << std::endl;
+            for (int64_t j = 0; j < (int64_t)cur_blk_size; j++)
+            {
+                std::cout << "closest_center[" << j << "] : " << closest_center[j] << std::endl;
+                block_compressed_base[j * num_pq_chunks + i] = closest_center[j];
+            }
+#endif
 
 #pragma omp parallel for schedule(static, 8192)
             for (int64_t j = 0; j < (int64_t)cur_blk_size; j++)

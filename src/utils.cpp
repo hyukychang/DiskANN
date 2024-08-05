@@ -220,6 +220,7 @@ double calculate_recall(uint32_t num_queries, uint32_t *gold_std, float *gs_dist
         }
         total_recall += cur_recall;
     }
+    std::cout << "total recall: " << total_recall << std::endl;
     return ((double)(total_recall / (num_queries))) * ((double)(100.0 / recall_at));
 }
 

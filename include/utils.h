@@ -372,7 +372,7 @@ inline size_t get_graph_num_frozen_points(const std::string &graph_file)
 
     std::ifstream in;
     in.exceptions(std::ios::badbit | std::ios::failbit);
-
+    diskann::cout << "open graph file: " << graph_file << std::endl;
     in.open(graph_file, std::ios::binary);
     in.read((char *)&expected_file_size, sizeof(size_t));
     in.read((char *)&max_observed_degree, sizeof(uint32_t));
@@ -505,7 +505,10 @@ inline void load_truthset(const std::string &bin_file, uint32_t *&ids, float *&d
     size_t expected_file_size_just_ids = npts * dim * sizeof(uint32_t) + 2 * sizeof(uint32_t);
 
     if (actual_file_size == expected_file_size_just_ids)
+    {
+        diskann::cout << "truthset has only ids truthset_type : 2" << std::endl;
         truthset_type = 2;
+    }
 
     if (truthset_type == -1)
     {
@@ -522,10 +525,30 @@ inline void load_truthset(const std::string &bin_file, uint32_t *&ids, float *&d
     ids = new uint32_t[npts * dim];
     reader.read((char *)ids, npts * dim * sizeof(uint32_t));
 
+    for (size_t i = 0; i < 1; i++)
+    {
+        diskann::cout << "printing ids for point " << i << std::endl;
+        for (size_t j = 0; j < dim; j++)
+        {
+            diskann::cout << ids[i * dim + j] << " ";
+        }
+        diskann::cout << std::endl;
+    }
+
     if (truthset_type == 1)
     {
         dists = new float[npts * dim];
         reader.read((char *)dists, npts * dim * sizeof(float));
+
+        for (size_t i = 0; i < 1; i++)
+        {
+            diskann::cout << "printing dists for point " << i << std::endl;
+            for (size_t j = 0; j < dim; j++)
+            {
+                diskann::cout << dists[i * dim + j] << " ";
+            }
+            diskann::cout << std::endl;
+        }
     }
 }
 

@@ -18,6 +18,7 @@
 #include "pq_flash_index.h"
 #include "timer.h"
 #include "tsl/robin_set.h"
+#include "index_factory.h"
 
 #define HYUK_DEBUG true
 
@@ -726,8 +727,40 @@ int build_merged_vamana_index(std::string base_file, diskann::Metric compareMetr
                                  std::make_shared<diskann::IndexWriteParameters>(low_degree_params), nullptr,
                                  defaults::NUM_FROZEN_POINTS_STATIC, false, false, false, build_pq_bytes > 0,
                                  build_pq_bytes, use_opq);
+
+        diskann::cout << "building custom index config" << std::endl;
+        auto config = diskann::IndexConfigBuilder()
+                          .with_metric(compareMetric)
+                          .with_dimension(shard_base_dim)
+                          .with_max_points(shard_base_pts)
+                          .with_data_load_store_strategy(diskann::DataStoreStrategy::MEMORY)
+                          .with_graph_load_store_strategy(diskann::GraphStoreStrategy::MEMORY)
+                          .with_data_type("float")
+                          .with_label_type("uint")
+                          .is_dynamic_index(false)
+                          .with_index_write_params(low_degree_params)
+                          .is_enable_tags(false)
+                          .is_use_opq(false)
+                          .is_pq_dist_build(false)
+                          .with_num_pq_chunks(0)
+                          .build();
+
         if (!use_filters)
         {
+            diskann::cout << "create factory" << std::endl;
+            auto index_factory = diskann::IndexFactory(config);
+            auto custom_index = index_factory.create_instance();
+            diskann::cout << "create complete" << std::endl;
+            auto filter_params = diskann::IndexFilterParamsBuilder()
+                                     .with_universal_label(universal_label)
+                                     .with_label_file("")
+                                     .with_save_path_prefix(shard_index_file)
+                                     .build();
+            custom_index->build(shard_base_file.c_str(), shard_base_pts, filter_params);
+            auto custom_file_path = shard_index_file + "_custom";
+            custom_index->save(custom_file_path.c_str());
+            diskann::cout << "custom index built" << std::endl;
+            custom_index.reset();
             _index.build(shard_base_file.c_str(), shard_base_pts);
         }
         else
@@ -752,7 +785,7 @@ int build_merged_vamana_index(std::string base_file, diskann::Metric compareMetr
             }
         }
 
-        std::remove(shard_base_file.c_str());
+        // std::remove(shard_base_file.c_str());
     }
     diskann::cout << timer.elapsed_seconds_for_step("building indices on shards") << std::endl;
 
@@ -763,29 +796,29 @@ int build_merged_vamana_index(std::string base_file, diskann::Metric compareMetr
     diskann::cout << timer.elapsed_seconds_for_step("merging indices") << std::endl;
 
     // delete tempFiles
-    for (int p = 0; p < num_parts; p++)
-    {
-        std::string shard_base_file = merged_index_prefix + "_subshard-" + std::to_string(p) + ".bin";
-        std::string shard_id_file = merged_index_prefix + "_subshard-" + std::to_string(p) + "_ids_uint32.bin";
-        std::string shard_labels_file = merged_index_prefix + "_subshard-" + std::to_string(p) + "_labels.txt";
-        std::string shard_index_file = merged_index_prefix + "_subshard-" + std::to_string(p) + "_mem.index";
-        std::string shard_index_file_data = shard_index_file + ".data";
+    // for (int p = 0; p < num_parts; p++)
+    // {
+    //     std::string shard_base_file = merged_index_prefix + "_subshard-" + std::to_string(p) + ".bin";
+    //     std::string shard_id_file = merged_index_prefix + "_subshard-" + std::to_string(p) + "_ids_uint32.bin";
+    //     std::string shard_labels_file = merged_index_prefix + "_subshard-" + std::to_string(p) + "_labels.txt";
+    //     std::string shard_index_file = merged_index_prefix + "_subshard-" + std::to_string(p) + "_mem.index";
+    //     std::string shard_index_file_data = shard_index_file + ".data";
 
-        std::remove(shard_base_file.c_str());
-        std::remove(shard_id_file.c_str());
-        std::remove(shard_index_file.c_str());
-        std::remove(shard_index_file_data.c_str());
-        if (use_filters)
-        {
-            std::string shard_index_label_file = shard_index_file + "_labels.txt";
-            std::string shard_index_univ_label_file = shard_index_file + "_universal_label.txt";
-            std::string shard_index_label_map_file = shard_index_file + "_labels_to_medoids.txt";
-            std::remove(shard_labels_file.c_str());
-            std::remove(shard_index_label_file.c_str());
-            std::remove(shard_index_label_map_file.c_str());
-            std::remove(shard_index_univ_label_file.c_str());
-        }
-    }
+    //     std::remove(shard_base_file.c_str());
+    //     std::remove(shard_id_file.c_str());
+    //     std::remove(shard_index_file.c_str());
+    //     std::remove(shard_index_file_data.c_str());
+    //     if (use_filters)
+    //     {
+    //         std::string shard_index_label_file = shard_index_file + "_labels.txt";
+    //         std::string shard_index_univ_label_file = shard_index_file + "_universal_label.txt";
+    //         std::string shard_index_label_map_file = shard_index_file + "_labels_to_medoids.txt";
+    //         std::remove(shard_labels_file.c_str());
+    //         std::remove(shard_index_label_file.c_str());
+    //         std::remove(shard_index_label_map_file.c_str());
+    //         std::remove(shard_index_univ_label_file.c_str());
+    //     }
+    // }
     return 0;
 }
 
@@ -1412,7 +1445,7 @@ int build_disk_index(const char *dataFilePath, const char *indexFilePath, const 
     }
     if (created_temp_file_for_processed_data)
         std::remove(prepped_base.c_str());
-    std::remove(mem_index_path.c_str());
+    // std::remove(mem_index_path.c_str());
     if (use_disk_pq)
         std::remove(disk_pq_compressed_vectors_path.c_str());
 

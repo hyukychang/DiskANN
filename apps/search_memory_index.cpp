@@ -22,6 +22,7 @@
 #include "utils.h"
 #include "program_options_utils.hpp"
 #include "index_factory.h"
+#define HYUK_DEBUG false
 
 namespace po = boost::program_options;
 
@@ -69,6 +70,10 @@ int search_memory_index(diskann::Metric &metric, const std::string &index_path, 
     }
 
     const size_t num_frozen_pts = diskann::get_graph_num_frozen_points(index_path);
+#if HYUK_DEBUG
+    std::cout << "load frozen point from index" << std::endl;
+    std::cout << "try to build Index config" << std::endl;
+#endif
 
     auto config = diskann::IndexConfigBuilder()
                       .with_metric(metric)
@@ -103,15 +108,15 @@ int search_memory_index(diskann::Metric &metric, const std::string &index_path, 
     uint32_t table_width = 0;
     if (tags)
     {
-        std::cout << std::setw(4) << "Ls" << std::setw(12) << qps_title << std::setw(20) << "Mean Latency (mus)"
+        std::cout << std::setw(10) << "Ls" << std::setw(12) << qps_title << std::setw(20) << "Mean Latency (mus)"
                   << std::setw(15) << "99.9 Latency";
-        table_width += 4 + 12 + 20 + 15;
+        table_width += 10 + 12 + 20 + 15;
     }
     else
     {
-        std::cout << std::setw(4) << "Ls" << std::setw(12) << qps_title << std::setw(18) << "Avg dist cmps"
+        std::cout << std::setw(10) << "Ls" << std::setw(12) << qps_title << std::setw(18) << "Avg dist cmps"
                   << std::setw(20) << "Mean Latency (mus)" << std::setw(15) << "99.9 Latency";
-        table_width += 4 + 12 + 18 + 20 + 15;
+        table_width += 10 + 12 + 18 + 20 + 15;
     }
     uint32_t recalls_to_print = 0;
     const uint32_t first_recall = print_all_recalls ? 1 : recall_at;
@@ -165,6 +170,9 @@ int search_memory_index(diskann::Metric &metric, const std::string &index_path, 
             auto qs = std::chrono::high_resolution_clock::now();
             if (filtered_search && !tags)
             {
+#if HYUK_DEBUG
+                diskann::cout << "search 1" << std::endl;
+#endif
                 std::string raw_filter = query_filters.size() == 1 ? query_filters[0] : query_filters[i];
 
                 auto retval = index->search_with_filters(query + i * query_aligned_dim, raw_filter, recall_at, L,
@@ -174,6 +182,9 @@ int search_memory_index(diskann::Metric &metric, const std::string &index_path, 
             }
             else if (metric == diskann::FAST_L2)
             {
+#if HYUK_DEBUG
+                diskann::cout << "search 2" << std::endl;
+#endif
                 index->search_with_optimized_layout(query + i * query_aligned_dim, recall_at, L,
                                                     query_result_ids[test_id].data() + i * recall_at);
             }
@@ -181,11 +192,17 @@ int search_memory_index(diskann::Metric &metric, const std::string &index_path, 
             {
                 if (!filtered_search)
                 {
+#if HYUK_DEBUG
+                    diskann::cout << "search 3" << std::endl;
+#endif
                     index->search_with_tags(query + i * query_aligned_dim, recall_at, L,
                                             query_result_tags.data() + i * recall_at, nullptr, res);
                 }
                 else
                 {
+#if HYUK_DEBUG
+                    diskann::cout << "search 4" << std::endl;
+#endif
                     std::string raw_filter = query_filters.size() == 1 ? query_filters[0] : query_filters[i];
 
                     index->search_with_tags(query + i * query_aligned_dim, recall_at, L,
@@ -199,9 +216,13 @@ int search_memory_index(diskann::Metric &metric, const std::string &index_path, 
             }
             else
             {
+#if HYUK_DEBUG
+                diskann::cout << "search 5" << std::endl;
+#endif
                 cmp_stats[i] = index
                                    ->search(query + i * query_aligned_dim, recall_at, L,
-                                            query_result_ids[test_id].data() + i * recall_at)
+                                            query_result_ids[test_id].data() + i * recall_at,
+                                            query_result_dists[test_id].data() + i * recall_at)
                                    .second;
             }
             auto qe = std::chrono::high_resolution_clock::now();
@@ -234,12 +255,12 @@ int search_memory_index(diskann::Metric &metric, const std::string &index_path, 
 
         if (tags && !filtered_search)
         {
-            std::cout << std::setw(4) << L << std::setw(12) << displayed_qps << std::setw(20) << (float)mean_latency
+            std::cout << std::setw(10) << L << std::setw(12) << displayed_qps << std::setw(20) << (float)mean_latency
                       << std::setw(15) << (float)latency_stats[(uint64_t)(0.999 * query_num)];
         }
         else
         {
-            std::cout << std::setw(4) << L << std::setw(12) << displayed_qps << std::setw(18) << avg_cmps
+            std::cout << std::setw(10) << L << std::setw(12) << displayed_qps << std::setw(18) << avg_cmps
                       << std::setw(20) << (float)mean_latency << std::setw(15)
                       << (float)latency_stats[(uint64_t)(0.999 * query_num)];
         }

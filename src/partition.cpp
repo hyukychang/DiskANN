@@ -28,6 +28,7 @@
 // block size for reading/ processing large files and matrices in blocks
 #define BLOCK_SIZE 5000000
 #define HYUK_DEBUG true
+#define HYUK_LOG_DATA false
 
 // #define SAVE_INFLATED_PQ true
 
@@ -604,6 +605,17 @@ int partition_with_ram_budget(const std::string data_file, const double sampling
     }
 
     diskann::cout << "Saving global k-center pivots" << std::endl;
+#if HYUK_LOG_DATA
+    for (size_t i = 0; i < num_parts; i++)
+    {
+        diskann::cout << "Pivot " << i << ": \n";
+        for (size_t j = 0; j < train_dim; j++)
+        {
+            diskann::cout << pivot_data[i * train_dim + j] << " ";
+        }
+        diskann::cout << std::endl;
+    }
+#endif
     diskann::save_bin<float>(output_file.c_str(), pivot_data, (size_t)num_parts, train_dim);
 
     shard_data_into_clusters_only_ids<T>(data_file, pivot_data, num_parts, train_dim, k_base, prefix_path);

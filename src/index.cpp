@@ -986,6 +986,7 @@ void Index<T, TagT, LabelT>::search_for_point_and_prune(int location, uint32_t L
 
     if (!use_filter)
     {
+        diskann::cout << "not using filter" << std::endl;
         _data_store->get_vector(location, scratch->aligned_query());
         iterate_to_fixed_point(scratch, Lindex, init_ids, false, unused_filter_label, false);
     }
@@ -1745,6 +1746,7 @@ void Index<T, TagT, LabelT>::build(const std::string &data_file, const size_t nu
     auto s = std::chrono::high_resolution_clock::now();
     if (filter_params.label_file == "")
     {
+        diskann::cout << "label file is empty" << std::endl;
         this->build(data_file.c_str(), points_to_load);
     }
     else

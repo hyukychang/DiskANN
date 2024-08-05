@@ -132,6 +132,8 @@ int main(int argc, char **argv)
                                  .with_label_file(label_file)
                                  .with_save_path_prefix(index_path_prefix)
                                  .build();
+        diskann::cout << "Building index with label_type: " << label_type << " use_opq: " << use_opq
+                      << "  use_pq_build: " << use_pq_build << "  build_PQ_bytes: " << build_PQ_bytes << std::endl;
         auto config = diskann::IndexConfigBuilder()
                           .with_metric(metric)
                           .with_dimension(data_dim)
