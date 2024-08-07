@@ -330,8 +330,8 @@ int main(int argc, char **argv)
         required_configs.add_options()("search_list,L",
                                        po::value<std::vector<uint32_t>>(&Lvec)->multitoken()->required(),
                                        program_options_utils::SEARCH_LIST_DESCRIPTION);
-        required_configs.add_options()("result_path", po::value<std::string>(&id_map_file)->required(),
-                                       "id_map file for distributed diskann mem_search");
+        required_configs.add_options()("id_map_file", po::value<std::string>(&id_map_file)->required(),
+                                       "id_map_file file for distributed diskann mem_search");
 
         // Optional parameters
         po::options_description optional_configs("Optional");
