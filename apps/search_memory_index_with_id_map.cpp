@@ -22,7 +22,7 @@
 #include "utils.h"
 #include "program_options_utils.hpp"
 #include "index_factory.h"
-#include "disk_utils.h"…
+#include "disk_utils.h"
 #define HYUK_DEBUG false
 
 namespace po = boost::program_options;
