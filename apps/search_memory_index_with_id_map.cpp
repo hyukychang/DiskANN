@@ -22,6 +22,7 @@
 #include "utils.h"
 #include "program_options_utils.hpp"
 #include "index_factory.h"
+#include "disk_utils.h"…
 #define HYUK_DEBUG false
 
 namespace po = boost::program_options;
@@ -237,6 +238,17 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
 
         if (show_qps_per_thread)
             displayed_qps /= num_threads;
+
+        std::vector<uint32_t> id_map;
+        diskann::read_idmap(id_map_file, id_map);
+
+        for (uint32_t i = 0; i < query_num; i++)
+        {
+            for (uint32_t j = 0; j < recall_at; j++)
+            {
+                query_result_ids[test_id][i * recall_at + j] = id_map[query_result_ids[test_id][i * recall_at + j]];
+            }
+        }
 
         std::vector<double> recalls;
         if (calc_recall_flag)
