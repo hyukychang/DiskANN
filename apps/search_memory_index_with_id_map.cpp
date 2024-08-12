@@ -36,6 +36,7 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                                     const bool show_qps_per_thread, const std::vector<std::string> &query_filters,
                                     const float fail_if_recall_below)
 {
+    auto command_start_time = std::chrono::high_resolution_clock::now();
     using TagT = uint32_t;
     // Load the query file
     T *query = nullptr;
@@ -307,6 +308,9 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
     }
 
     diskann::aligned_free(query);
+    auto command_end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = command_end_time - command_start_time;
+    std::cout << "Total time taken: " << diff.count() << " seconds" << std::endl;
     return best_recall >= fail_if_recall_below ? 0 : -1;
 }
 
