@@ -268,14 +268,14 @@ def master_with_worker(comm: Intracomm, size: int):
             print(f"Master received result {result} from slave {task}")
     receive_end_time = time.time()
 
+
+    gt_ids, gt_dist = _read_ground_truth_file(GT_FILE)
+    merged_result = _merge_result(query_results, SEARCH_K)
     print(
         "The time of execution of above program is :",
         (receive_end_time - send_start_time) * 10**3,
         "ms",
     )
-
-    gt_ids, gt_dist = _read_ground_truth_file(GT_FILE)
-    merged_result = _merge_result(query_results, SEARCH_K)
     recall = _calculate_recall(merged_result, gt_ids, SEARCH_K)
     print(f"Recall: {recall}")
     print("All tasks completed. Results:", results)
