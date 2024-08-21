@@ -45,9 +45,9 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                   << "index_path: " << index_path << "result_path: " << result_path_prefix
                   << "query_file: " << query_file << "truthset_file: " << truthset_file
                   << "id_map_file: " << id_map_file << "num_threads: " << num_threads << "recall_at: " << recall_at
-                  << "print_all_recalls: " << print_all_recalls << "Lvec: " << Lvec << "dynamic: " << dynamic
-                  << "tags: " << tags << "show_qps_per_thread: " << show_qps_per_thread
-                  << "fail_if_recall_below: " << fail_if_recall_below << std::endl;
+                  << "print_all_recalls: " << print_all_recalls << "dynamic: " << dynamic << "tags: " << tags
+                  << "show_qps_per_thread: " << show_qps_per_thread << "fail_if_recall_below: " << fail_if_recall_below
+                  << std::endl;
     return 0;
 
     auto command_start_time = std::chrono::high_resolution_clock::now();
