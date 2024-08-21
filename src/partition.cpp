@@ -581,6 +581,13 @@ int partition_with_ram_budget(const std::string data_file, const double sampling
         // closest clusters.
 
         std::vector<size_t> cluster_sizes;
+        if (k_base >= num_parts)
+        {
+            diskann::cout << "k_base (" << k_base << ") >= num_parts (" << num_parts << "). Skip...." << std::endl;
+            fit_in_ram = false;
+            num_parts += 2;
+            continue;
+        }
         estimate_cluster_sizes(test_data_float, num_test, pivot_data, num_parts, train_dim, k_base, cluster_sizes);
 
         for (auto &p : cluster_sizes)

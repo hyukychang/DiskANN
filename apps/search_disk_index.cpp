@@ -65,6 +65,7 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     else
         diskann::cout << ", io_limit: " << search_io_limit << "." << std::endl;
 
+    auto command_start_time = std::chrono::high_resolution_clock::now();
     std::string warmup_query_file = index_path_prefix + "_sample_data.bin";
 
     // load query bin
@@ -307,6 +308,9 @@ int search_disk_index(diskann::Metric &metric, const std::string &index_path_pre
     diskann::aligned_free(query);
     if (warmup != nullptr)
         diskann::aligned_free(warmup);
+    auto command_end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = command_end_time - command_start_time;
+    std::cout << "Total time taken: " << diff.count() * 1000 << " ms" << std::endl;
     return best_recall >= fail_if_recall_below ? 0 : -1;
 }
 

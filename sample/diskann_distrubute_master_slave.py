@@ -29,6 +29,8 @@ GT_FILE = f"{DATA_PATH}/sift_query_base_gt_100"
 
 RESULT_PREFIX = f"{SAMPLE_PATH}/result/mem-"
 
+DUPLICATE_FACTOR = 2
+
 
 UINT_8_SIZE = 1
 UINT_32_SIZE = 4
@@ -225,7 +227,7 @@ def _calculate_recall(query_result: List, ground_truth_ids: List, K: int) -> flo
     print(f"{'L':>10}{f'merged_search_reacall@{SEARCH_K}':>30}")
     print("=" * 70)
     for idx_L in range(len(L_list)):
-        merged_recall = f"{merged_count[idx_L] / (SEARCH_K * query_num) * 100:.2f}"
+        merged_recall = f"{merged_count[idx_L] / (SEARCH_K * query_num) * 100:.5f}"
         print(f"{L_list[idx_L]:>10}{merged_recall:>30}")
 
 
@@ -267,7 +269,6 @@ def master_with_worker(comm: Intracomm, size: int):
             query_results.append(response_data["data"])
             print(f"Master received result {result} from slave {task}")
     receive_end_time = time.time()
-
 
     gt_ids, gt_dist = _read_ground_truth_file(GT_FILE)
     merged_result = _merge_result(query_results, SEARCH_K)
