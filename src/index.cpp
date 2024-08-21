@@ -986,7 +986,7 @@ void Index<T, TagT, LabelT>::search_for_point_and_prune(int location, uint32_t L
 
     if (!use_filter)
     {
-        diskann::cout << "not using filter" << std::endl;
+        // diskann::cout << "not using filter" << std::endl;
         _data_store->get_vector(location, scratch->aligned_query());
         iterate_to_fixed_point(scratch, Lindex, init_ids, false, unused_filter_label, false);
     }
