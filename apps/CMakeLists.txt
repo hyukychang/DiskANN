@@ -31,6 +31,13 @@ target_link_libraries(test_streaming_scenario ${PROJECT_NAME} ${DISKANN_TOOLS_TC
 add_executable(test_insert_deletes_consolidate test_insert_deletes_consolidate.cpp)
 target_link_libraries(test_insert_deletes_consolidate ${PROJECT_NAME} ${DISKANN_TOOLS_TCMALLOC_LINK_OPTIONS} Boost::program_options)
 
+
+find_package(MPI REQUIRED)
+include_directories(${MPI_INCLUDE_PATH})
+add_executable(hello_mpi hello_mpi.cpp)
+target_link_libraries(hello_mpi PUBLIC MPI::MPI_CXX ${PROJECT_NAME} ${DISKANN_ASYNC_LIB} ${DISKANN_TOOLS_TCMALLOC_LINK_OPTIONS} Boost::program_options)
+
+
 if (NOT MSVC)
     install(TARGETS build_memory_index
             build_stitched_index
