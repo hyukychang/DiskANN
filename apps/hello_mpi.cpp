@@ -38,8 +38,8 @@ mpiexec -hostfile hostfile_cpp.txt -N 1 ./apps/hello_mpi \
 --dist_fn l2 \
 --index_path_prefix data/sift/base/disk_index_sift_base_R32_L50_A1.2_mem.index_tempFiles_subshard- \
 --query_file data/sift/sift_query.fbin \
--K 10 -L 10 20 30 40 50 100 1000 10000 \
---result_path data/sift/base/result/mem- \
+-K 10 -L 10 20 30 40 50 100 200 300 \
+--result_path data/sift/base/result/mem_mpi- \
 --gt_file data/sift/base/sift_query_base_gt_100 \
 --id_map_file data/sift/base/disk_index_sift_base_R32_L50_A1.2_mem.index_tempFiles_subshard-
  */
@@ -70,7 +70,6 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                   << "\nrecall_at: " << recall_at << "\nprint_all_recalls: " << print_all_recalls
                   << "\ndynamic: " << dynamic << "\ntags: " << tags << "\nshow_qps_per_thread: " << show_qps_per_thread
                   << "\nfail_if_recall_below: " << fail_if_recall_below << std::endl;
-    return 0;
 
     auto command_start_time = std::chrono::high_resolution_clock::now();
     using TagT = uint32_t;
@@ -207,6 +206,11 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
 #pragma omp parallel for schedule(dynamic, 1)
         for (int64_t i = 0; i < (int64_t)query_num; i++)
         {
+            if (i != 0)
+            {
+                continue;
+            }
+
             auto qs = std::chrono::high_resolution_clock::now();
             if (filtered_search && !tags)
             {
@@ -268,6 +272,14 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
             auto qe = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> diff = qe - qs;
             latency_stats[i] = (float)(diff.count() * 1000000);
+            if (rank == MASTER_RANK)
+            {
+                std::cout << "hi i am master" << std::endl;
+            }
+            else
+            {
+                std::cout << "hi i am slave" << std::endl;
+            }
         }
         std::chrono::duration<double> diff = std::chrono::high_resolution_clock::now() - s;
 
