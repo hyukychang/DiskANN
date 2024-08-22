@@ -4,6 +4,7 @@
 #include <vector>
 #include <unistd.h>
 #include <limits.h>
+#include <windows.h>
 
 #include <cstring>
 #include <iomanip>
@@ -29,6 +30,7 @@
 #include "disk_utils.h"
 #define HYUK_DEBUG false
 #define MASTER_RANK 0
+#define START_TAG 0
 
 #include <sstream>
 
@@ -225,12 +227,27 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
 #pragma omp parallel for schedule(dynamic, 1)
         for (int64_t i = 0; i < (int64_t)query_num; i++)
         {
-            // if (i != 0)
-            // {
-            //     continue;
-            // }
-
             auto qs = std::chrono::high_resolution_clock::now();
+            if (rank == MASTER_RANK)
+            {
+                // master send start signal to slaves
+                for (int i = 1; i < size; i++)
+                {
+                    int start_signal = 1;
+                    Sleep(10000);
+                    MPI_Send(&start_signal, 1, MPI_INT, i, START_TAG, MPI_COMM_WORLD);
+                }
+            }
+            else
+            {
+                int start_signal;
+                MPI_Recv(&start_signal, 1, MPI_INT, MASTER_RANK, START_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+            if (i != 0)
+            {
+                continue;
+            }
+
             if (filtered_search && !tags)
             {
 #if HYUK_DEBUG
