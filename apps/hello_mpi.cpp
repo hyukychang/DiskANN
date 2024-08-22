@@ -243,10 +243,10 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                 int start_signal;
                 MPI_Recv(&start_signal, 1, MPI_INT, MASTER_RANK, START_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
-            if (i != 0)
-            {
-                continue;
-            }
+            // if (i != 0)
+            // {
+            //     continue;
+            // }
 
             if (filtered_search && !tags)
             {
