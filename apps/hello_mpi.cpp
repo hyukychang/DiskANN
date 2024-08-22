@@ -274,9 +274,15 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
             }
 
             // after search is done, we need to map the ids back to the original ids
+            std::string slave_results;
+            slave_results.reserve(128);
             for (uint32_t j = 0; j < recall_at; j++)
             {
                 query_result_ids[test_id][i * recall_at + j] = id_map[query_result_ids[test_id][i * recall_at + j]];
+                slave_results.append(std::to_string(query_result_ids[test_id][i * recall_at + j]));
+                slave_results.append(",");
+                slave_results.append(std::to_string(query_result_dists[test_id][i * recall_at + j]));
+                slave_results.append("|");
             }
 
             // after mapping send the result to master
@@ -288,14 +294,6 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
             // we are going to use 3 machine
             received_results.reserve(3);
 
-            std::string slave_results;
-            slave_results.reserve(128);
-            slave_results.append(std::to_string(rank));
-            slave_results.append(",");
-            slave_results.append(std::to_string(i));
-            slave_results.append(",");
-            slave_results.append(std::to_string(recall_at));
-
             if (rank == MASTER_RANK)
             {
                 // std::cout << "hi i am master receive from 2 slave" << std::endl;
@@ -304,6 +302,8 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                 {
                     if (i == MASTER_RANK)
                     {
+                        received_results.push_back(slave_results);
+                        std::cout << "inserting " << slave_results << std::endl;
                         continue;
                     }
                     char received_result[128];
