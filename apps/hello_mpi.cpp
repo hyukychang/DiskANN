@@ -209,10 +209,10 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
 #pragma omp parallel for schedule(dynamic, 1)
         for (int64_t i = 0; i < (int64_t)query_num; i++)
         {
-            // if (i != 0)
-            // {
-            //     continue;
-            // }
+            if (i != 0)
+            {
+                continue;
+            }
 
             auto qs = std::chrono::high_resolution_clock::now();
             if (filtered_search && !tags)
@@ -284,21 +284,31 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
             std::string tag_str;
             tag_str = std::to_string(test_id) + std::to_string(i);
             uint32_t tag = std::stoi(tag_str);
+            std::vector<std::string> received_results;
+            // we are going to use 3 machine
+            received_results.reserve(3);
+
+            std::string slave_results;
+            slave_results = std::to_string(rank) + "," + std::to_string(i) + "," + std::to_string(recall_at) + ",";
             if (rank == MASTER_RANK)
             {
                 // std::cout << "hi i am master receive from 2 slave" << std::endl;
 
-                int received_rank;
-                for (int i = 1; i < 3; i++)
+                for (int i = 0; i < 3; i++)
                 {
-                    MPI_Recv(&received_rank, 1, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                    // std::cout << "Received from rank " << received_rank << std::endl;
+                    if (i == MASTER_RANK)
+                    {
+                        continue;
+                    }
+                    MPI_Recv(&received_results[i], 128, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD,
+                             MPI_STATUS_IGNORE);
+                    std::cout << "Received " << received_results[i] << std::endl;
                 }
             }
             else
             {
                 // std::cout << "hi i am slave" << std::endl;
-                MPI_Send(&rank, 1, MPI_INT, MASTER_RANK, tag, MPI_COMM_WORLD);
+                MPI_Send(slave_results.c_str(), slave_results.size(), MPI_CHAR, MASTER_RANK, tag, MPI_COMM_WORLD);
             }
 
             auto qe = std::chrono::high_resolution_clock::now();
