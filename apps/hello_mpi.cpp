@@ -342,10 +342,10 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                 std::vector<std::tuple<int, float>> merged_result_vector;
                 for (int i = 0; i < size; i++)
                 {
-                    std::vector<std::string> result_vector = std::split(received_results[i], '|');
+                    std::vector<std::string> result_vector = split(received_results[i], '|');
                     for (int j = 0; j < result_vector.size(); j++)
                     {
-                        std::vector<std::string> id_dist = std::split(result_vector[j], ',');
+                        std::vector<std::string> id_dist = split(result_vector[j], ',');
                         merged_result_vector.push_back(std::make_tuple(std::stoi(id_dist[0]), std::stof(id_dist[1])));
                     }
                 }
