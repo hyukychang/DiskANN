@@ -225,10 +225,10 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
 #pragma omp parallel for schedule(dynamic, 1)
         for (int64_t i = 0; i < (int64_t)query_num; i++)
         {
-            if (i != 0)
-            {
-                continue;
-            }
+            // if (i != 0)
+            // {
+            //     continue;
+            // }
 
             auto qs = std::chrono::high_resolution_clock::now();
             if (filtered_search && !tags)
@@ -319,25 +319,26 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                     if (i == MASTER_RANK)
                     {
                         received_results.push_back(slave_results);
-                        std::cout << "inserting " << slave_results << std::endl;
+                        // std::cout << "inserting " << slave_results << std::endl;
                         continue;
                     }
                     char received_result[256];
                     MPI_Recv(&received_result, 256, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                    std::cout << "Received " << received_result << std::endl;
+                    // std::cout << "Received " << received_result << std::endl;
                     received_results.push_back(received_result);
                 }
             }
             else
             {
                 // std::cout << "hi i am slave" << std::endl;
-                std::cout << "Sending \n"
-                          << slave_results << "\nsize: " << slave_results.size() << " cap: " << slave_results.capacity()
-                          << std::endl;
+                // std::cout << "Sending \n"
+                //           << slave_results << "\nsize: " << slave_results.size() << " cap: " <<
+                //           slave_results.capacity()
+                //           << std::endl;
 
                 MPI_Send(slave_results.c_str(), slave_results.size() + 1, MPI_CHAR, MASTER_RANK, tag, MPI_COMM_WORLD);
             }
-            if (rank == MASTER_RANK)
+            if (rank == MASTER_RANK) // sort and merge the result
             {
                 std::vector<std::tuple<int, float>> merged_result_vector;
                 for (int i = 0; i < size; i++)
@@ -353,11 +354,33 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                           [](const std::tuple<int, float> &a, const std::tuple<int, float> &b) {
                               return std::get<1>(a) < std::get<1>(b);
                           });
-                std::cout << "Merged result vector" << std::endl;
+                // std::cout << "Merged result vector" << std::endl;
+                // for (int i = 0; i < merged_result_vector.size(); i++)
+                // {
+                //     std::cout << std::get<0>(merged_result_vector[i]) << " " << std::get<1>(merged_result_vector[i])
+                //               << std::endl;
+                // }
+                std::vector<int> merged_result_ids;
                 for (int i = 0; i < merged_result_vector.size(); i++)
                 {
-                    std::cout << std::get<0>(merged_result_vector[i]) << " " << std::get<1>(merged_result_vector[i])
-                              << std::endl;
+                    uint32_t id = std::get<0>(merged_result_vector[i]);
+                    if (std::find(merged_result_ids.begin(), merged_result_ids.end(), id) != merged_result_ids.end())
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        merged_result_ids.push_back(std::get<0>(merged_result_vector[i]));
+                    }
+                }
+                // std::cout << "Merged result ids" << std::endl;
+                // for (int i = 0; i < merged_result_ids.size(); i++)
+                // {
+                //     std::cout << merged_result_ids[i] << std::endl;
+                // }
+                for (uint32_t j = 0; j < recall_at; j++)
+                {
+                    query_result_ids[test_id][i * recall_at + j] = merged_result_ids[j];
                 }
             }
 
