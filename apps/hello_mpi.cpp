@@ -306,7 +306,7 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                     {
                         continue;
                     }
-                    std::string received_result;
+                    char received_result[128];
                     MPI_Recv(&received_result, 128, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     std::cout << "Received " << received_result << std::endl;
                     received_results.push_back(received_result);
@@ -319,7 +319,7 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                           << slave_results << "\nsize: " << slave_results.size() << " cap: " << slave_results.capacity()
                           << std::endl;
 
-                MPI_Send(slave_results.c_str(), slave_results.size(), MPI_CHAR, MASTER_RANK, tag, MPI_COMM_WORLD);
+                MPI_Send(slave_results.c_str(), slave_results.size() + 1, MPI_CHAR, MASTER_RANK, tag, MPI_COMM_WORLD);
             }
 
             auto qe = std::chrono::high_resolution_clock::now();
