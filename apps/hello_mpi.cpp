@@ -306,14 +306,19 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                     {
                         continue;
                     }
-                    MPI_Recv(&received_results[i], 128, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD,
-                             MPI_STATUS_IGNORE);
-                    std::cout << "Received " << received_results[i] << std::endl;
+                    std::string received_result;
+                    MPI_Recv(&received_result, 128, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                    std::cout << "Received " << received_result << std::endl;
+                    received_results.push_back(received_result);
                 }
             }
             else
             {
                 // std::cout << "hi i am slave" << std::endl;
+                std::cout << "Sending \n"
+                          << slave_results << "\nsize: " << slave_results.size() << " cap: " << slave_results.capacity()
+                          << std::endl;
+
                 MPI_Send(slave_results.c_str(), slave_results.size(), MPI_CHAR, MASTER_RANK, tag, MPI_COMM_WORLD);
             }
 
