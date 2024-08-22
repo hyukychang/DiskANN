@@ -289,7 +289,7 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
             received_results.reserve(3);
 
             std::string slave_results;
-            slave_results.set_capacity(128);
+            slave_results.reserve(128);
             slave_results.append(std::to_string(rank));
             slave_results.append(",");
             slave_results.append(std::to_string(i));
