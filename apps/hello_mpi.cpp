@@ -281,6 +281,9 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
 
             // after mapping send the result to master
             // for master rank, receive the result from all the slaves for each query
+            std::string tag_str;
+            tag_str = std::to_string(test_id) + std::to_string(i);
+            uint32_t tag = std::stoi(tag_str);
             if (rank == MASTER_RANK)
             {
                 std::cout << "hi i am master receive from 2 slave" << std::endl;
@@ -288,14 +291,14 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                 int received_rank;
                 for (int i = 1; i < 3; i++)
                 {
-                    MPI_Recv(&received_rank, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                    MPI_Recv(&received_rank, 1, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     std::cout << "Received from rank " << received_rank << std::endl;
                 }
             }
             else
             {
                 std::cout << "hi i am slave" << std::endl;
-                MPI_Send(&rank, 1, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD);
+                MPI_Send(&rank, 1, MPI_INT, MASTER_RANK, tag, MPI_COMM_WORLD);
             }
 
             auto qe = std::chrono::high_resolution_clock::now();
