@@ -561,7 +561,7 @@ int partition_with_ram_budget(const std::string data_file, const double sampling
     //  cur_file = cur_file + "_kmeans_partitioning-" +
     //  std::to_string(num_parts);
     output_file = cur_file + "_centroids.bin";
-
+    auto s = std::chrono::high_resolution_clock::now();
     while (!fit_in_ram)
     {
         fit_in_ram = true;
@@ -610,7 +610,9 @@ int partition_with_ram_budget(const std::string data_file, const double sampling
             num_parts += 2;
         }
     }
-
+    auto e = std::chrono::high_resolution_clock::now();
+    diskann::cout << "[HYUK_DEBUG] Time taken for decide partitioning: "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() << "ms" << std::endl;
     diskann::cout << "Saving global k-center pivots" << std::endl;
 #if HYUK_LOG_DATA
     for (size_t i = 0; i < num_parts; i++)
