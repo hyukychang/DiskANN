@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <mpi.h>
-// #include <iostream>
+#include <iostream>
 #include <vector>
 #include <unistd.h>
 #include <limits.h>
@@ -28,9 +28,21 @@
 #include "index_factory.h"
 #include "disk_utils.h"
 #define HYUK_DEBUG false
+#define MASTER_RANK 0
 
 namespace po = boost::program_options;
 
+/*
+mpiexec -hostfile hostfile_cpp.txt -N 1 ./apps/hello_mpi \
+--data_type float \
+--dist_fn l2 \
+--index_path_prefix data/sift/base/disk_index_sift_base_R32_L50_A1.2_mem.index_tempFiles_subshard- \
+--query_file data/sift/sift_query.fbin \
+-K 10 -L 10 20 30 40 50 100 1000 10000 \
+--result_path data/sift/base/result/mem- \
+--gt_file data/sift/base/sift_query_base_gt_100 \
+--id_map_file data/sift/base/disk_index_sift_base_R32_L50_A1.2_mem.index_tempFiles_subshard-
+ */
 template <typename T, typename LabelT = uint32_t>
 int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &index_path,
                                     const std::string &result_path_prefix, const std::string &query_file,
@@ -38,16 +50,26 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                                     const uint32_t num_threads, const uint32_t recall_at, const bool print_all_recalls,
                                     const std::vector<uint32_t> &Lvec, const bool dynamic, const bool tags,
                                     const bool show_qps_per_thread, const std::vector<std::string> &query_filters,
-                                    const float fail_if_recall_below)
+                                    const float fail_if_recall_below, const uint32_t rank)
 {
+    char hostname[100];
+    if (gethostname(hostname, sizeof(hostname)) == 0)
+    {
+        std::cout << "get host name" << std::endl;
+    }
+    else
+    {
+        std::cerr << "failed to get host name" << std::endl;
+    }
 
-    diskann::cout << "search memory index with id map" << "with parameters" << "Metric: " << metric
-                  << "index_path: " << index_path << "result_path: " << result_path_prefix
-                  << "query_file: " << query_file << "truthset_file: " << truthset_file
-                  << "id_map_file: " << id_map_file << "num_threads: " << num_threads << "recall_at: " << recall_at
-                  << "print_all_recalls: " << print_all_recalls << "dynamic: " << dynamic << "tags: " << tags
-                  << "show_qps_per_thread: " << show_qps_per_thread << "fail_if_recall_below: " << fail_if_recall_below
-                  << std::endl;
+    diskann::cout << "========================================"
+                  << "\nsearch memory index with id map with parameters in " << hostname << "\nMetric: " << metric
+                  << "\nindex_path: " << index_path << "\nresult_path: " << result_path_prefix
+                  << "\nquery_file: " << query_file << "\ntruthset_file: " << truthset_file
+                  << "\nid_map_file: " << id_map_file << "\nnum_threads: " << num_threads
+                  << "\nrecall_at: " << recall_at << "\nprint_all_recalls: " << print_all_recalls
+                  << "\ndynamic: " << dynamic << "\ntags: " << tags << "\nshow_qps_per_thread: " << show_qps_per_thread
+                  << "\nfail_if_recall_below: " << fail_if_recall_below << std::endl;
     return 0;
 
     auto command_start_time = std::chrono::high_resolution_clock::now();
@@ -339,7 +361,6 @@ int main(int argc, char **argv)
     char hostname[100];
     if (gethostname(hostname, sizeof(hostname)) == 0)
     {
-        std::cout << "get host name" << std::endl;
     }
     else
     {
@@ -488,6 +509,10 @@ int main(int argc, char **argv)
         query_filters = read_file_to_vector_of_strings(query_filters_file);
     }
 
+    index_path_prefix = index_path_prefix + std::to_string(rank) + "_mem.index_custom";
+    result_path = result_path + std::to_string(rank);
+    id_map_file = id_map_file + std::to_string(rank) + "_ids_uint32.bin";
+
     try
     {
         if (!query_filters.empty() && label_type == "ushort")
@@ -496,19 +521,22 @@ int main(int argc, char **argv)
             {
                 return search_memory_index_with_id_map<int8_t, uint16_t>(
                     metric, index_path_prefix, result_path, query_file, gt_file, id_map_file, num_threads, K,
-                    print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below);
+                    print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below,
+                    rank);
             }
             else if (data_type == std::string("uint8"))
             {
                 return search_memory_index_with_id_map<uint8_t, uint16_t>(
                     metric, index_path_prefix, result_path, query_file, gt_file, id_map_file, num_threads, K,
-                    print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below);
+                    print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below,
+                    rank);
             }
             else if (data_type == std::string("float"))
             {
                 return search_memory_index_with_id_map<float, uint16_t>(
                     metric, index_path_prefix, result_path, query_file, gt_file, id_map_file, num_threads, K,
-                    print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below);
+                    print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below,
+                    rank);
             }
             else
             {
@@ -520,21 +548,24 @@ int main(int argc, char **argv)
         {
             if (data_type == std::string("int8"))
             {
-                return search_memory_index_with_id_map<int8_t>(
-                    metric, index_path_prefix, result_path, query_file, gt_file, id_map_file, num_threads, K,
-                    print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below);
+                return search_memory_index_with_id_map<int8_t>(metric, index_path_prefix, result_path, query_file,
+                                                               gt_file, id_map_file, num_threads, K, print_all_recalls,
+                                                               Lvec, dynamic, tags, show_qps_per_thread, query_filters,
+                                                               fail_if_recall_below, rank);
             }
             else if (data_type == std::string("uint8"))
             {
-                return search_memory_index_with_id_map<uint8_t>(
-                    metric, index_path_prefix, result_path, query_file, gt_file, id_map_file, num_threads, K,
-                    print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below);
+                return search_memory_index_with_id_map<uint8_t>(metric, index_path_prefix, result_path, query_file,
+                                                                gt_file, id_map_file, num_threads, K, print_all_recalls,
+                                                                Lvec, dynamic, tags, show_qps_per_thread, query_filters,
+                                                                fail_if_recall_below, rank);
             }
             else if (data_type == std::string("float"))
             {
-                return search_memory_index_with_id_map<float>(
-                    metric, index_path_prefix, result_path, query_file, gt_file, id_map_file, num_threads, K,
-                    print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below);
+                return search_memory_index_with_id_map<float>(metric, index_path_prefix, result_path, query_file,
+                                                              gt_file, id_map_file, num_threads, K, print_all_recalls,
+                                                              Lvec, dynamic, tags, show_qps_per_thread, query_filters,
+                                                              fail_if_recall_below, rank);
             }
             else
             {
