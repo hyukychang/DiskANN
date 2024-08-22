@@ -187,6 +187,8 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
     }
 
     double best_recall = 0.0;
+    std::vector<uint32_t> id_map;
+    diskann::read_idmap(id_map_file, id_map);
 
     for (uint32_t test_id = 0; test_id < Lvec.size(); test_id++)
     {
@@ -269,17 +271,35 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                                             query_result_dists[test_id].data() + i * recall_at)
                                    .second;
             }
-            auto qe = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> diff = qe - qs;
-            latency_stats[i] = (float)(diff.count() * 1000000);
+
+            // after search is done, we need to map the ids back to the original ids
+            for (uint32_t j = 0; j < recall_at; j++)
+            {
+                query_result_ids[test_id][i * recall_at + j] = id_map[query_result_ids[test_id][i * recall_at + j]];
+            }
+
+            // after mapping send the result to master
+            // for master rank, receive the result from all the slaves for each query
             if (rank == MASTER_RANK)
             {
-                std::cout << "hi i am master" << std::endl;
+                std::cout << "hi i am master receive from 2 slave" << std::endl;
+
+                int received_rank;
+                for (int i = 1; i < 3; i++)
+                {
+                    MPI_Recv(&received_rank, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                    std::cout << "Received from rank " << received_rank << std::endl;
+                }
             }
             else
             {
                 std::cout << "hi i am slave" << std::endl;
+                MPI_Send(&rank, 1, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD);
             }
+
+            auto qe = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> diff = qe - qs;
+            latency_stats[i] = (float)(diff.count() * 1000000);
         }
         std::chrono::duration<double> diff = std::chrono::high_resolution_clock::now() - s;
 
@@ -287,17 +307,6 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
 
         if (show_qps_per_thread)
             displayed_qps /= num_threads;
-
-        std::vector<uint32_t> id_map;
-        diskann::read_idmap(id_map_file, id_map);
-
-        for (uint32_t i = 0; i < query_num; i++)
-        {
-            for (uint32_t j = 0; j < recall_at; j++)
-            {
-                query_result_ids[test_id][i * recall_at + j] = id_map[query_result_ids[test_id][i * recall_at + j]];
-            }
-        }
 
         std::vector<double> recalls;
         if (calc_recall_flag)
