@@ -50,7 +50,7 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                                     const uint32_t num_threads, const uint32_t recall_at, const bool print_all_recalls,
                                     const std::vector<uint32_t> &Lvec, const bool dynamic, const bool tags,
                                     const bool show_qps_per_thread, const std::vector<std::string> &query_filters,
-                                    const float fail_if_recall_below, const uint32_t rank)
+                                    const float fail_if_recall_below, const uint32_t rank, const uint32_t size)
 {
     char hostname[100];
     if (gethostname(hostname, sizeof(hostname)) == 0)
@@ -292,13 +292,13 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
             uint32_t tag = std::stoi(tag_str);
             std::vector<std::string> received_results;
             // we are going to use 3 machine
-            received_results.reserve(3);
+            received_results.reserve(size);
 
             if (rank == MASTER_RANK)
             {
                 // std::cout << "hi i am master receive from 2 slave" << std::endl;
 
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < size; i++)
                 {
                     if (i == MASTER_RANK)
                     {
@@ -306,8 +306,8 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                         std::cout << "inserting " << slave_results << std::endl;
                         continue;
                     }
-                    char received_result[128];
-                    MPI_Recv(&received_result, 128, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                    char received_result[256];
+                    MPI_Recv(&received_result, 256, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     std::cout << "Received " << received_result << std::endl;
                     received_results.push_back(received_result);
                 }
@@ -320,6 +320,29 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                           << std::endl;
 
                 MPI_Send(slave_results.c_str(), slave_results.size() + 1, MPI_CHAR, MASTER_RANK, tag, MPI_COMM_WORLD);
+            }
+            if (rank == MASTER_RANK)
+            {
+                std::vector<std::tuple<int, float>> merged_result_vector;
+                for (int i = 0; i < size; i++)
+                {
+                    std::vector<std::string> result_vector = split(received_results[i], '|');
+                    for (int j = 0; j < result_vector.size(); j++)
+                    {
+                        std::vector<std::string> id_dist = split(result_vector[j], ',');
+                        merged_result_vector.push_back(std::make_tuple(std::stoi(id_dist[0]), std::stof(id_dist[1])));
+                    }
+                }
+                std::sort(merged_result_vector.begin(), merged_result_vector.end(),
+                          [](const std::tuple<int, float> &a, const std::tuple<int, float> &b) {
+                              return std::get<1>(a) < std::get<1>(b);
+                          });
+                std::cout << "Merged result vector" << std::endl;
+                for (int i = 0; i < merged_result_vector.size(); i++)
+                {
+                    std::cout << std::get<0>(merged_result_vector[i]) << " " << std::get<1>(merged_result_vector[i])
+                              << std::endl;
+                }
             }
 
             auto qe = std::chrono::high_resolution_clock::now();
@@ -575,21 +598,21 @@ int main(int argc, char **argv)
                 return search_memory_index_with_id_map<int8_t, uint16_t>(
                     metric, index_path_prefix, result_path, query_file, gt_file, id_map_file, num_threads, K,
                     print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below,
-                    rank);
+                    rank, size);
             }
             else if (data_type == std::string("uint8"))
             {
                 return search_memory_index_with_id_map<uint8_t, uint16_t>(
                     metric, index_path_prefix, result_path, query_file, gt_file, id_map_file, num_threads, K,
                     print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below,
-                    rank);
+                    rank, size);
             }
             else if (data_type == std::string("float"))
             {
                 return search_memory_index_with_id_map<float, uint16_t>(
                     metric, index_path_prefix, result_path, query_file, gt_file, id_map_file, num_threads, K,
                     print_all_recalls, Lvec, dynamic, tags, show_qps_per_thread, query_filters, fail_if_recall_below,
-                    rank);
+                    rank, size);
             }
             else
             {
@@ -605,21 +628,21 @@ int main(int argc, char **argv)
                 return search_memory_index_with_id_map<int8_t>(metric, index_path_prefix, result_path, query_file,
                                                                gt_file, id_map_file, num_threads, K, print_all_recalls,
                                                                Lvec, dynamic, tags, show_qps_per_thread, query_filters,
-                                                               fail_if_recall_below, rank);
+                                                               fail_if_recall_below, rank, size);
             }
             else if (data_type == std::string("uint8"))
             {
                 return search_memory_index_with_id_map<uint8_t>(metric, index_path_prefix, result_path, query_file,
                                                                 gt_file, id_map_file, num_threads, K, print_all_recalls,
                                                                 Lvec, dynamic, tags, show_qps_per_thread, query_filters,
-                                                                fail_if_recall_below, rank);
+                                                                fail_if_recall_below, rank, size);
             }
             else if (data_type == std::string("float"))
             {
                 return search_memory_index_with_id_map<float>(metric, index_path_prefix, result_path, query_file,
                                                               gt_file, id_map_file, num_threads, K, print_all_recalls,
                                                               Lvec, dynamic, tags, show_qps_per_thread, query_filters,
-                                                              fail_if_recall_below, rank);
+                                                              fail_if_recall_below, rank, size);
             }
             else
             {
