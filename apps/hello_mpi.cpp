@@ -4,7 +4,7 @@
 #include <vector>
 #include <unistd.h>
 #include <limits.h>
-#include <windows.h>
+// #include <windows.h>
 
 #include <cstring>
 #include <iomanip>
@@ -234,7 +234,7 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
                 for (int i = 1; i < size; i++)
                 {
                     int start_signal = 1;
-                    Sleep(10000);
+                    // Sleep(10000);
                     MPI_Send(&start_signal, 1, MPI_INT, i, START_TAG, MPI_COMM_WORLD);
                 }
             }
