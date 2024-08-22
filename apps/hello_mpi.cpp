@@ -104,6 +104,7 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
             std::cout << "Error. Mismatch in number of queries and size of query "
                          "filters file"
                       << std::endl;
+            MPI_Finalize();
             return -1; // To return -1 or some other error handling?
         }
     }
@@ -368,6 +369,7 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
     auto command_end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = command_end_time - command_start_time;
     std::cout << "Total time taken: " << diff.count() * 1000 << " ms" << std::endl;
+    MPI_Finalize();
     return best_recall >= fail_if_recall_below ? 0 : -1;
 }
 
@@ -389,7 +391,7 @@ int main(int argc, char **argv)
     }
     printf("Hello world from process %d of %d in host name %s\n", rank, size, hostname);
     // Finalize the MPI environment.
-    MPI_Finalize();
+    // MPI_Finalize();
 
     // Required parameters
     std::string data_type, dist_fn, index_path_prefix, result_path, query_file, gt_file, filter_label, label_type,
@@ -466,6 +468,7 @@ int main(int argc, char **argv)
         if (vm.count("help"))
         {
             std::cout << desc;
+            MPI_Finalize();
             return 0;
         }
         po::notify(vm);
@@ -473,6 +476,7 @@ int main(int argc, char **argv)
     catch (const std::exception &ex)
     {
         std::cerr << ex.what() << '\n';
+        MPI_Finalize();
         return -1;
     }
 
@@ -499,24 +503,28 @@ int main(int argc, char **argv)
                      "supported in general, and mips/fast_l2 only for floating "
                      "point data."
                   << std::endl;
+        MPI_Finalize();
         return -1;
     }
 
     if (dynamic && not tags)
     {
         std::cerr << "Tags must be enabled while searching dynamically built indices" << std::endl;
+        MPI_Finalize();
         return -1;
     }
 
     if (fail_if_recall_below < 0.0 || fail_if_recall_below >= 100.0)
     {
         std::cerr << "fail_if_recall_below parameter must be between 0 and 100%" << std::endl;
+        MPI_Finalize();
         return -1;
     }
 
     if (filter_label != "" && query_filters_file != "")
     {
         std::cerr << "Only one of filter_label and query_filters_file should be provided" << std::endl;
+        MPI_Finalize();
         return -1;
     }
 
@@ -562,6 +570,7 @@ int main(int argc, char **argv)
             else
             {
                 std::cout << "Unsupported type. Use float/int8/uint8" << std::endl;
+                MPI_Finalize();
                 return -1;
             }
         }
@@ -591,6 +600,7 @@ int main(int argc, char **argv)
             else
             {
                 std::cout << "Unsupported type. Use float/int8/uint8" << std::endl;
+                MPI_Finalize();
                 return -1;
             }
         }
@@ -599,6 +609,7 @@ int main(int argc, char **argv)
     {
         std::cout << std::string(e.what()) << std::endl;
         diskann::cerr << "Index search failed." << std::endl;
+        MPI_Finalize();
         return -1;
     }
 }
