@@ -289,7 +289,13 @@ int search_memory_index_with_id_map(diskann::Metric &metric, const std::string &
             received_results.reserve(3);
 
             std::string slave_results;
-            slave_results = std::to_string(rank) + "," + std::to_string(i) + "," + std::to_string(recall_at) + ",";
+            slave_results.set_capacity(128);
+            slave_results.append(std::to_string(rank));
+            slave_results.append(",");
+            slave_results.append(std::to_string(i));
+            slave_results.append(",");
+            slave_results.append(std::to_string(recall_at));
+
             if (rank == MASTER_RANK)
             {
                 // std::cout << "hi i am master receive from 2 slave" << std::endl;
