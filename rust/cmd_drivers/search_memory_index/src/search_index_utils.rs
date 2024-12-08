@@ -134,6 +134,9 @@ pub(crate) fn load_aligned_bin<T: Default + Copy + Sized + Pod>(
     let t_size = size_of::<T>();
     let (npts, dim, file_size): (usize, usize, usize);
     {
+        println!("################################################################");
+        println!("[debuging by hyuk] Executing in the Rust code");
+        ("################################################################");
         println!("Reading (with alignment) bin file: {bin_file}");
         let mut file = File::open(bin_file)?;
         file_size = file.metadata()?.len() as usize;
